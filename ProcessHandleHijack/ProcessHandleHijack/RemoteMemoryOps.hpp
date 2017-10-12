@@ -1,9 +1,23 @@
+
 #pragma once
+
+
 #include <windows.h> 
 #include <stdio.h> 
 #include <tchar.h>
 #include <strsafe.h>
 #include <iostream>
+
+#include "Types.hpp"
+
+extern bool readLoop;
+
+// ugly to define the wanted items / player gnames this way.
+extern std::vector<std::string> playerGNameVec;
+extern std::vector<std::string> vehicleGNameVec;
+extern std::map<std::string, std::string> dropGNameMap;
+
+
 
 #define PIPEWAITTIMOUTIFBUSY 20000
 
@@ -16,30 +30,62 @@
 #define RMO_ORDER_WRITEPROCESSMEMORY 2
 
 
-template<typename T>
-struct ResponseType {
+
+
+
+
+typedef struct RMOResponseRPM64 RMOResponseRPM64;
+struct RMOResponseRPM64 {
+	// RMORequestRPM request;
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
-	T read;
+	LONGLONG val;
 };
 
+
+
+typedef struct RMOResponseRPM32 RMOResponseRPM32;
+struct RMOResponseRPM32 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT32 val;
+};
+
+
+
+typedef struct RMOResponseRPMVec RMOResponseRPMVec;
+struct RMOResponseRPMVec {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	Vector3 val;
+};
 
 
 typedef struct RMORequestRPM RMORequestRPM;
 struct RMORequestRPM {
 	int order = 0;
-	int address = 0;
+	LONGLONG address = 0;
 	int size = BUFSIZE;
 	bool base = false;
 };
 
-typedef struct RMOResponseRPM RMOResponseRPM;
+typedef struct RMOResponseRPMBytes RMOResponseRPMBytes;
+struct RMOResponseRPMBytes {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	byte val[BUFSIZE];
+};
+
+/*typedef struct RMOResponseRPM RMOResponseRPM;
 struct RMOResponseRPM {
 	// RMORequestRPM request;
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	byte bytes[BUFSIZE];
-};
+};*/
 
 /*class HandleGatewayServer {
 public:
@@ -64,8 +110,17 @@ public:
 
 	// Functions to ReadProcessMemory remotely
 	bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest);
-	RMOResponseRPM HandleGatewayClient::ReceiveReadProcessMemory();
-	RMOResponseRPM HandleGatewayClient::RemoteReadProcessMemory(RMORequestRPM rpmRequest); 
+	RMOResponseRPM64 HandleGatewayClient::ReceiveReadProcessMemory64();
+	RMOResponseRPM64 HandleGatewayClient::RemoteReadProcessMemory64(RMORequestRPM rpmRequest); 
+
+	RMOResponseRPM32 HandleGatewayClient::ReceiveReadProcessMemory32();
+	RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rpmRequest);
+
+	RMOResponseRPMVec HandleGatewayClient::ReceiveReadProcessMemoryVec();
+	RMOResponseRPMVec HandleGatewayClient::RemoteReadProcessMemoryVec(RMORequestRPM rpmRequest);
+
+	RMOResponseRPMBytes HandleGatewayClient::ReceiveReadProcessMemoryBytes();
+	RMOResponseRPMBytes HandleGatewayClient::RemoteReadProcessMemoryBytes(RMORequestRPM rpmRequest);
 
 protected:
 	HANDLE m_pipeHandle = INVALID_HANDLE_VALUE;

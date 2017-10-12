@@ -4,7 +4,6 @@
 #include <psapi.h>
 #include <string>
 #include <exception>
-#include "Types.hpp"
 #include "RemoteMemoryOps.hpp"
 
 
@@ -45,7 +44,7 @@ public:
 		return base;
 	}
 
-	template<typename T>
+	/*template<typename T>
 	T readType(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
 	{
 		//T writeMe;
@@ -64,13 +63,70 @@ public:
 		}
 
 		return (T)response.bytes;
+	}*/
+	int64_t readType64(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPM64 response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(int64_t);
+			response = gatewayClient.RemoteReadProcessMemory64(request);
+		}
+
+		return response.val;
+	}
+	int32_t readType32(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPM32 response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(int32_t);
+			response = gatewayClient.RemoteReadProcessMemory32(request);
+		}
+
+		return response.val;
+	}
+	Vector3 readTypeVec(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPMVec response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(Vector3);
+			response = gatewayClient.RemoteReadProcessMemoryVec(request);
+		}
+
+		return response.val;
 	}
 
 	// caution: if you use this method, you need to delete the allocated heap from where ever you called this method from
-	byte* readSize(const int64_t& w_read, const int32_t& w_readSize, const PROTO_MESSAGE& w_protoMsg)
+	RMOResponseRPMBytes* readSize(const int64_t& w_read, const int32_t& w_readSize, const PROTO_MESSAGE& w_protoMsg)
 	{
 		RMORequestRPM request;
-		RMOResponseRPM response;
+		RMOResponseRPMBytes *response = new RMOResponseRPMBytes;
 		// memset(paluu, 0, readSize);
 
 		if (w_protoMsg == PROTO_NORMAL_READ)
@@ -82,65 +138,41 @@ public:
 			request.order = 1;
 			request.address = w_read;
 			request.size = w_readSize - 2;
-			response = gatewayClient.RemoteReadProcessMemory(request);
+			*response = gatewayClient.RemoteReadProcessMemoryBytes(request);
 
 		}
 
-		if (response.status == 0)
+		if (response->status == 0)
 		{
 			return NULL;
 		}
 
-		return response.bytes;
+		return response;
 	}
 	
-
-	// this needs to be fixed, its currently a workaround of just reading 3 floats.
-	Vector3 readVec(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
-	{
-		/*
-		RMORequestRPM request;
-		RMOResponseRPM response;
-
-		if (w_protoMsg == PROTO_NORMAL_READ)
-		{
-			//readStruct luku{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(Vector3), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
-			// send the struct to IOCTL
-			//WriteFile(m_hDriver, (LPCVOID)&luku, sizeof(ReadStruct), NULL, NULL);
-			request.order = 1;
-			request.address = w_read;
-			request.size = sizeof(Vector3);
-			response = gatewayClient.RemoteReadProcessMemory(request);
-		}
-
-		return (Vector3)(response.bytes);*/
-		
-		Vector3 vec;
-		vec.X = bytesToFloat(readSize(w_read, sizeof(float), w_protoMsg));
-		vec.Y = bytesToFloat(readSize(w_read + sizeof(float), sizeof(float), w_protoMsg));
-		vec.Z = bytesToFloat(readSize(w_read + (2*sizeof(float)), sizeof(float), w_protoMsg));
-		return vec;
-
-	}
 
 	// returns a string, if this method fails, returns "FAIL"
 	std::string getGNameFromId(const int32_t& w_id)
 	{
-		int64_t GNames = readType<int64_t>(m_PUBase + 0x36DA610, PROTO_NORMAL_READ);
-		int64_t singleNameChunk = readType<int64_t>(GNames + (w_id / 0x4000) * 8, PROTO_NORMAL_READ);
-		int64_t singleNamePtr = readType<int64_t>(singleNameChunk + 8 * (w_id % 0x4000), PROTO_NORMAL_READ);
+		int64_t GNames = readType64(m_PUBase + 0x36DA610, PROTO_NORMAL_READ);
+		int64_t singleNameChunk = readType64(GNames + (w_id / 0x4000) * 8, PROTO_NORMAL_READ);
+		int64_t singleNamePtr = readType64(singleNameChunk + 8 * (w_id % 0x4000), PROTO_NORMAL_READ);
 
 		char* name;
-		if ((name = (char*)readSize(singleNamePtr + 16, 64, PROTO_NORMAL_READ)) != NULL)
+		RMOResponseRPMBytes *response = readSize(singleNamePtr + 16, 64, PROTO_NORMAL_READ);
+		if ((name = (char*)(response->val)) != NULL)
 		{
 			std::string s = std::string(name);
 			delete name;
+			delete response;
 			return s;
 		}
 		else
 		{
+			delete response;
 			return std::string("FAIL");
 		}
+		
 	}
 
 	/*

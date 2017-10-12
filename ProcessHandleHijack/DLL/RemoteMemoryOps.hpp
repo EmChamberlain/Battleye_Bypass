@@ -14,17 +14,39 @@
 #define RMO_ORDER_READPROCESSMEMORY 1
 #define RMO_ORDER_WRITEPROCESSMEMORY 2
 
+struct Vector3
+{
+	float X;
+	float Y;
+	float Z;
+};
 
 
 
 
-
-template<typename T>
-struct ResponseType {
+struct RMOResponseRPM64 {
 	// RMORequestRPM request;
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
-	T read;
+	LONGLONG val;
+};
+
+
+
+struct RMOResponseRPM32 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT32 val;
+};
+
+
+
+struct RMOResponseRPMVec {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	Vector3 val;
 };
 
 
@@ -36,12 +58,12 @@ struct RMORequestRPM {
 };
 
 
-struct RMOResponseRPM {
-	// RMORequestRPM request;
-	BOOL status = FALSE;
-	SIZE_T bytesRead = 0;
-	byte bytes[BUFSIZE];
-};
+/*struct RMOResponseRPM {
+// RMORequestRPM request;
+BOOL status = FALSE;
+SIZE_T bytesRead = 0;
+byte bytes[BUFSIZE];
+};*/
 
 class HandleGatewayServer {
 public:
@@ -57,5 +79,5 @@ protected:
 	DWORD  m_threadId = 0;
 	HANDLE m_pipeHandle = INVALID_HANDLE_VALUE;
 	LPTSTR m_lpszPipename = TEXT("\\\\.\\pipe\\serverpipe");
-	
+
 };

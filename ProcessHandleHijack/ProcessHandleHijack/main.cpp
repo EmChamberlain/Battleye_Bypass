@@ -2,13 +2,12 @@
 #include <iostream>
 #include <thread>
 
-#include "RemoteMemoryOps.hpp"
-#include "Types.hpp"
 #include "GameDataParser.hpp"
 #include "LRadar.hpp"
 #include "KReader.hpp"
 
 using namespace std;
+
 
 void test() {
 	HandleGatewayClient gatewayClient;
@@ -29,16 +28,17 @@ void test() {
 
 		if (orderUser == 1) {
 			//RMORequestRPM rpmRequest = { RMO_ORDER_READPROCESSMEMORY, 216, 0xBEFC74, 10 };
-			RMOResponseRPM rpmResponse;
+			RMOResponseRPMVec rpmResponse;
 			RMORequestRPM rpmRequest;
 			rpmRequest.order = RMO_ORDER_READPROCESSMEMORY;
-
-			cout << "Memory address to read (in hexadecimal): ";
+			rpmRequest.address = 0x00007FF96B141010;
+			rpmRequest.size = sizeof(Vector3);
+			/*cout << "Memory address to read (in hexadecimal): ";
 			cin >> hex >> rpmRequest.address;
 			cout << "Size to read (bytes, in decimal): ";
-			cin >> dec >> rpmRequest.size;
+			cin >> dec >> rpmRequest.size;*/
 
-			rpmResponse = gatewayClient.RemoteReadProcessMemory(rpmRequest);
+			rpmResponse = gatewayClient.RemoteReadProcessMemoryVec(rpmRequest);
 
 			cout << endl;
 			cout << "Status: " << rpmResponse.status << endl;
@@ -46,9 +46,18 @@ void test() {
 			cout << endl;
 
 			cout << "Raw data (as chars): " << endl;
-			for (int i(0); i < 10; ++i) {
-				cout << ((char *)rpmResponse.bytes)[i];
+			for (int i(0); i < rpmRequest.size; ++i) {
+				cout << ((char *)(&rpmResponse.val))[i];
 			}
+			cout << endl;
+
+			//cout << "Hex data: " << hex << rpmResponse.val << endl;
+			
+			cout << endl;
+
+			//cout << "Val: " << dec << rpmResponse.val << endl;
+
+			cout << "X: " << rpmResponse.val.X << " Y: " << rpmResponse.val.Y << " Z: " << rpmResponse.val.Z << endl;
 			cout << endl << endl;
 
 			system("pause");
@@ -68,17 +77,25 @@ void testKReader()
 	cout << sizeof(int64_t) << endl;
 	do {
 		
-		int address = 0;
-		int size = 0;
+		int64_t address = 0x00007FF96B141100;
 
-		cout << "Memory address to read (in hexadecimal): ";
-		cin >> hex >> address;
 
-		int64_t integer64 = reader->readType<int64_t>((int64_t)address, PROTO_NORMAL_READ);
+		int64_t integer64 = reader->readType64(address, PROTO_NORMAL_READ);
+		cout << "int64_t: " << integer64 << endl << endl;
 
-		cout << integer64 << endl;
+		int32_t integer32 = reader->readType32(address, PROTO_NORMAL_READ);
+		cout << "int32_t: " << integer32 << endl << endl;
 
+		Vector3 vec = reader->readTypeVec(address, PROTO_NORMAL_READ);
+		cout << "X: " << vec.X << " Y: " << vec.Y << " Z: " << vec.Z << endl;
+
+		char* name;
+		RMOResponseRPMBytes *response = reader->readSize(address, 64, PROTO_NORMAL_READ);
+		if ((name = (char*)(response->val)) != NULL)
+		cout << name << endl;
 		std::system("pause");
+		delete name;
+		delete response;
 		std::system("cls");
 	} while (true);
 
@@ -107,8 +124,8 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 
 int main()
 {
-	test();
-	//testKReader();
+	//test();
+	testKReader();
 	/*
 	// init a new GameDataParser instance
 	GameDataParser* GDParser;

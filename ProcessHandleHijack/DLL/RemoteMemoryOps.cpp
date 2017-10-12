@@ -2,7 +2,7 @@
 
 
 
-#include "RemoteMemoryOps.h"
+#include "RemoteMemoryOps.hpp"
 #include "handles.h"
 
 using namespace std;
@@ -88,14 +88,15 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 
 int HandleGatewayServer::Gateway() {
 	HANDLE hHeap = GetProcessHeap();
-	void* request = HeapAlloc(hHeap, 0, MAXPIPEFILESIZE);
+	//void* request = HeapAlloc(hHeap, 0, MAXPIPEFILESIZE);
+	RMORequestRPM request;
 	void* reply = HeapAlloc(hHeap, 0, MAXPIPEFILESIZE);
 
 	DWORD cbBytesRead = 0, cbReplyBytes = 0, cbWritten = 0;
 	BOOL fSuccess = FALSE;
 
 	while (1) { // Loop until done reading
-		fSuccess = ReadFile(m_pipeHandle, request, MAXPIPEFILESIZE, &cbBytesRead, NULL);
+		fSuccess = ReadFile(m_pipeHandle, &request, MAXPIPEFILESIZE, &cbBytesRead, NULL);
 
 		if (!fSuccess || cbBytesRead == 0) {
 			if (GetLastError() == ERROR_BROKEN_PIPE) {
@@ -107,18 +108,10 @@ int HandleGatewayServer::Gateway() {
 			break;
 		}
 
-		int orderID = ((int*)request)[0];
-
-		if (orderID == RMO_ORDER_READPROCESSMEMORY) {
-			RMORequestRPM rpmRequest;
-			rpmRequest.order = ((int*)request)[0];
-			rpmRequest.address = ((int*)request)[1];
-			rpmRequest.size = ((int*)request)[2];
-			HandleGatewayServer::RemoteReadProcessMemory(rpmRequest);
-		}
-		else {
-			std::cout << "ERROR ]> Unknown order received in the request. orderID: " << dec << orderID << endl;
-		}
+		
+		HandleGatewayServer::RemoteReadProcessMemory(request);
+		
+		
 	}
 
 	// Flush the pipe to allow the client to read the pipe's contents before disconnecting.
@@ -128,7 +121,7 @@ int HandleGatewayServer::Gateway() {
 	DisconnectNamedPipe(m_pipeHandle);
 	CloseHandle(m_pipeHandle);
 
-	HeapFree(hHeap, 0, request);
+	//HeapFree(hHeap, 0, request);
 	HeapFree(hHeap, 0, reply);
 
 	std::cout << "OK    ]> Gateway closing." << endl;
@@ -136,8 +129,8 @@ int HandleGatewayServer::Gateway() {
 }
 
 BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
-	RMOResponseRPM response;
 	if (request.base) {
+		struct RMOResponseRPM64 response;
 		LPVOID lpBase = NULL;
 		HMODULE hMods[512];
 		DWORD cb;
@@ -161,15 +154,9 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			}
 		}
 		response.status = (DWORD_PTR)lpBase;
-	}
-	else
-	{
-		//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
-
-		// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
-		response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
 		if (response.status == 0) {
-			std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+			std::cout << "ERROR ]> FindBase failed!" << endl;
+			std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
 		}
 
 		BOOL fSuccess = FALSE;
@@ -181,6 +168,87 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 		else {
 			std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
 		}
+	}
+	else
+	{
+		if (request.order == 0)
+		{
+
+			RMOResponseRPM64 response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
+		else if (request.order == 1)
+		{
+
+			RMOResponseRPM32 response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
+		else if (request.order == 2)
+		{
+
+			RMOResponseRPMVec response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
+		else
+		{
+			std::cout << "ERROR ]> Unknown order: " << request.order << endl;
+		}
+
+		
 	}
 	
 		

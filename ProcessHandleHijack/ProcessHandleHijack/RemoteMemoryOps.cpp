@@ -1,5 +1,15 @@
 #include "RemoteMemoryOps.hpp"
 
+
+bool readLoop = false;
+
+// ugly to define the wanted items / player gnames this way.
+std::vector<std::string> playerGNameVec = { "PlayerMale", "PlayerFemale" };
+std::vector<std::string> vehicleGNameVec = { "Uaz", "Buggy", "Dacia", "ABP_Motorbike", "BP_Motorbike", "Boat_PG117" };
+std::map<std::string, std::string> dropGNameMap = { { "Item_Head_G_01_Lv3_C", "Helm3" },{ "Item_Head_G_01_Lv3_", "Helm3" },{ "Item_Armor_C_01_Lv3", "Vest3" },{ "Item_Armor_C_01_Lv3_C", "Vest3" },{ "Item_Equip_Armor_Lv3_C", "Vest3" },{ "Item_Equip_Armor_Lv3", "Vest3" },{ "Item_Attach_Weapon_Muzzle_Suppressor_SniperRifle", "Supp(SR)" },{ "Item_Attach_Weapon_Muzzle_Suppressor_Large", "Supp(AR)" },{ "Item_Attach_Weapon_Muzzle_Suppressor_Large_C", "Supp(SR)" },{ "Item_Heal_MedKit", "Meds" },{ "Item_Heal_FirstAid", "Meds" },{ "Item_Weapon_Kar98k", "kar98" },{ "Item_Weapon_Mini14", "mini" },{ "Item_Weapon_M16A4", "M16" },{ "Item_Weapon_HK416", "m416" },{ "Item_Weapon_SCAR-L", "SCAR" },{ "Item_Weapon_SKS", "sks" },{ "Item_Attach_Weapon_Upper_ACOG_01", "4x" },{ "Item_Attach_Weapon_Upper_CQBSS", "8x" },{ "Item_Attach_Weapon_Upper_CQBSS_C", "8x" } };
+
+
+
 using namespace std;
 
 int HandleGatewayClient::ConnectPipe() {
@@ -48,7 +58,7 @@ bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest) {
 	BOOL fSuccess = FALSE;
 	DWORD bytesWritten = 0;
 	fSuccess = WriteFile(m_pipeHandle, &rpmRequest, sizeof(rpmRequest), &bytesWritten, NULL);
-
+	cout << "Address: " << hex << rpmRequest.address << " Size: " << dec << rpmRequest.size << endl;
 	if (!fSuccess) {
 		cout << "WriteFile to pipe failed. GetLastError: " << dec << GetLastError() << endl;
 		return false;
@@ -59,13 +69,13 @@ bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest) {
 	return true;
 }
 
-RMOResponseRPM HandleGatewayClient::ReceiveReadProcessMemory() {
-	RMOResponseRPM response;
+RMOResponseRPM64 HandleGatewayClient::ReceiveReadProcessMemory64() {
+	RMOResponseRPM64 response;
 	BOOL fSuccess = FALSE;
 	DWORD bytesRead = 0;
 
 	do { // Read from the pipe.
-		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM), &bytesRead, NULL);
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM64), &bytesRead, NULL);
 
 		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
 			break;
@@ -78,15 +88,103 @@ RMOResponseRPM HandleGatewayClient::ReceiveReadProcessMemory() {
 	return response;
 }
 
-RMOResponseRPM HandleGatewayClient::RemoteReadProcessMemory(RMORequestRPM rpmRequest) {
-	RMOResponseRPM response;
-
+RMOResponseRPM64 HandleGatewayClient::RemoteReadProcessMemory64(RMORequestRPM rpmRequest) {
+	RMOResponseRPM64 response;
+	rpmRequest.order = 0;
 	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
-		response = HandleGatewayClient::ReceiveReadProcessMemory();
+		response = HandleGatewayClient::ReceiveReadProcessMemory64();
 	}
 
 	return response;
 }
+
+RMOResponseRPM32 HandleGatewayClient::ReceiveReadProcessMemory32() {
+	RMOResponseRPM32 response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM32), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
+RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rpmRequest) {
+	RMOResponseRPM32 response;
+	rpmRequest.order = 1;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemory32();
+	}
+
+	return response;
+}
+
+RMOResponseRPMVec HandleGatewayClient::ReceiveReadProcessMemoryVec() {
+	RMOResponseRPMVec response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPMVec), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
+RMOResponseRPMVec HandleGatewayClient::RemoteReadProcessMemoryVec(RMORequestRPM rpmRequest) {
+	RMOResponseRPMVec response;
+	rpmRequest.order = 2;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemoryVec();
+	}
+
+	return response;
+}
+
+RMOResponseRPMBytes HandleGatewayClient::ReceiveReadProcessMemoryBytes() {
+	RMOResponseRPMBytes response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM64), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
+RMOResponseRPMBytes HandleGatewayClient::RemoteReadProcessMemoryBytes(RMORequestRPM rpmRequest) {
+	RMOResponseRPMBytes response;
+	rpmRequest.order = 0;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemoryBytes();
+	}
+
+	return response;
+}
+
 
 BOOL HandleGatewayClient::DisconnectPipe() {
 	return CloseHandle(m_pipeHandle);

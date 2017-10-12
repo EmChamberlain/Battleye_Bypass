@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "handles.h"
-#include "RemoteMemoryOps.h"
+#include "RemoteMemoryOps.hpp"
 
 using namespace std;
 

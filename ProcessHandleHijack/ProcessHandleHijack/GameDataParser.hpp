@@ -1,6 +1,6 @@
 #pragma once
+
 #include "KReader.hpp"
-#include "Types.hpp"
 #include <deque>
 #include <vector>
 
@@ -45,21 +45,21 @@ private:
 		for (int i = 0; i < m_playerCount; i++)
 		{
 			// read the position of Player
-			int64_t curActor = m_kReader->readType<int64_t>(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
-			int32_t curActorID = m_kReader->readType<int32_t>(curActor + 0x0018, PROTO_NORMAL_READ);
+			int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
+			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);
 			std::string actorGName = m_kReader->getGNameFromId(curActorID);
 
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
-				int64_t rootCmpPtr = m_kReader->readType<int64_t>(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType<int64_t>(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
+				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-				int32_t actorTeam = m_kReader->readType<int32_t>(playerState + 0x0444, PROTO_NORMAL_READ);
+				int32_t actorTeam = m_kReader->readType32(playerState + 0x0444, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType<int32_t>(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType<int32_t>(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 				// actorLocation.Z += ReadAny<int>(PWorld + 0x920, PROTO_NORMAL_READ);
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
@@ -68,20 +68,20 @@ private:
 
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
-				int64_t rootCmpPtr = m_kReader->readType<int64_t>(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType<int64_t>(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
-				int64_t DroppedItemArray = m_kReader->readType<int64_t>(curActor + 0x2D8, PROTO_NORMAL_READ);
-				int32_t DroppedItemCount = m_kReader->readType<int32_t>(curActor + 0x2E0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
+				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2D8, PROTO_NORMAL_READ);
+				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x2E0, PROTO_NORMAL_READ);
 
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
-					int64_t ADroppedItem = m_kReader->readType<int64_t>(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
-					Vector3 droppedLocation = m_kReader->readVec(ADroppedItem + 0x1E0, PROTO_NORMAL_READ);
-					droppedLocation.X = droppedLocation.X + actorLocation.X + m_kReader->readType<int32_t>(m_PWorld + 0x918, PROTO_NORMAL_READ);
-					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_kReader->readType<int32_t>(m_PWorld + 0x91C, PROTO_NORMAL_READ);
-					int64_t UItem = m_kReader->readType<int64_t>(ADroppedItem + 0x448, PROTO_NORMAL_READ);
-					int32_t UItemID = m_kReader->readType<int32_t>(UItem + 0x18, PROTO_NORMAL_READ);
+					int64_t ADroppedItem = m_kReader->readType64(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
+					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x1E0, PROTO_NORMAL_READ);
+					droppedLocation.X = droppedLocation.X + actorLocation.X + m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x448, PROTO_NORMAL_READ);
+					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
 					std::string itemName = m_kReader->getGNameFromId(UItemID);
 
 					// check if inside the map / array of wanted items
@@ -89,11 +89,11 @@ private:
 					{
 						if (itemName.substr(0, it->first.length()) == it->first)
 						{
-							int64_t rootCmpPtr = m_kReader->readType<int64_t>(curActor + 0x180, PROTO_NORMAL_READ);
-							Vector3 actorLocation = m_kReader->readVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+							int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
+							Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-							actorLocation.X += m_kReader->readType<int32_t>(m_PWorld + 0x918, PROTO_NORMAL_READ);
-							actorLocation.Y += m_kReader->readType<int32_t>(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+							actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+							actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
 							//w_data["items"].emplace_back(json::object({ { "n", it->second },{ "x", droppedLocation.X },{ "y", droppedLocation.Y } }));
 							items.push_back(Item(it->second, droppedLocation));
@@ -104,12 +104,12 @@ private:
 
 			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
-				int64_t rootCmpPtr = m_kReader->readType<int64_t>(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType<int64_t>(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
+				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType<int32_t>(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType<int32_t>(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", "Drop" },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehicles.push_back(Vehicle("Drop", actorLocation));
@@ -152,11 +152,11 @@ private:
 			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
-				int64_t rootCmpPtr = m_kReader->readType<int64_t>(curActor + 0x180, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType<int32_t>(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType<int32_t>(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
 				std::string carName = m_kReader->getGNameFromId(curActorID);
 
@@ -168,23 +168,23 @@ private:
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType<int64_t>(m_kReader->getPUBase() + 0x37D7818, PROTO_NORMAL_READ);
-		m_gameInstance = m_kReader->readType<int64_t>(m_UWorld + 0x140, PROTO_NORMAL_READ);
-		m_ULocalPlayer = m_kReader->readType<int64_t>(m_gameInstance + 0x38, PROTO_NORMAL_READ);
-		m_localPlayer = m_kReader->readType<int64_t>(m_ULocalPlayer, PROTO_NORMAL_READ);
-		m_viewportclient = m_kReader->readType<int64_t>(m_localPlayer + 0x58, PROTO_NORMAL_READ);
-		m_localPawn = m_kReader->readType<int64_t>(m_localPlayer + 0x3A8, PROTO_NORMAL_READ);
-		m_localPlayerState = m_kReader->readType<int64_t>(m_localPawn + 0x3C0, PROTO_NORMAL_READ);
-		m_PWorld = m_kReader->readType<int64_t>(m_viewportclient + 0x80, PROTO_NORMAL_READ);
-		m_ULevel = m_kReader->readType<int64_t>(m_PWorld + 0x30, PROTO_NORMAL_READ);
-		m_playerCount = m_kReader->readType<int64_t>(m_ULevel + 0xA8, PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x37D7818, PROTO_NORMAL_READ);
+		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);
+		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
+		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
+		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);
+		m_localPawn = m_kReader->readType64(m_localPlayer + 0x3A8, PROTO_NORMAL_READ);
+		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3C0, PROTO_NORMAL_READ);
+		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);
+		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);
+		m_playerCount = m_kReader->readType64(m_ULevel + 0xA8, PROTO_NORMAL_READ);
 
-		m_localPlayerPosition = m_kReader->readVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
-		m_localPlayerBasePointer = m_kReader->readType<int64_t>(m_localPlayer, PROTO_NORMAL_READ);
+		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
+		m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
-		m_localTeam = m_kReader->readType<int32_t>(m_localPlayerState + 0x0444, PROTO_NORMAL_READ);
+		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0444, PROTO_NORMAL_READ);
 
-		m_AActorPtr = m_kReader->readType<int64_t>(m_ULevel + 0xA0, PROTO_NORMAL_READ);
+		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);
 	}
 
 
@@ -234,3 +234,4 @@ private:
 	std::vector<int32_t> playerIDs;
 	std::vector<int32_t> vehicleIDs;
 };
+
