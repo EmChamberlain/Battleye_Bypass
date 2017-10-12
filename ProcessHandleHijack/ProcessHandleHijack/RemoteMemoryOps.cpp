@@ -77,28 +77,6 @@ RMOResponseRPM HandleGatewayClient::ReceiveReadProcessMemory() {
 
 	return response;
 }
-template<typename T>
-ResponseType<T> HandleGatewayClient::RemoteReadType(RMORequestRPM request) {
-
-	HandleGatewayClient::RequestReadProcessMemory(request)
-
-	ResponseType<T> response;
-	BOOL fSuccess = FALSE;
-	DWORD bytesRead = 0;
-
-	do { // Read from the pipe.
-		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(response), &bytesRead, NULL);
-
-		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
-			break;
-
-	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
-
-	if (!fSuccess)
-		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
-
-	return response;
-}
 
 RMOResponseRPM HandleGatewayClient::RemoteReadProcessMemory(RMORequestRPM rpmRequest) {
 	RMOResponseRPM response;

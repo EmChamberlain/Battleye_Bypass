@@ -31,7 +31,7 @@ DWORD WINAPI MainThread(LPVOID lpParam)
 	cout << "Attached to console." << endl;
 	
 	HandleGatewayServer handleGatewayServer;
-	handleGatewayServer.Init(L"flux.exe");
+	handleGatewayServer.Init(L"obs64.exe");
 	//handleGatewayServer.Init(L"TslGame.exe");
 	
 	FreeLibraryAndExitThread(NULL, EXIT_SUCCESS);

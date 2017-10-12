@@ -5,7 +5,7 @@
 #include <string>
 #include <exception>
 #include "Types.hpp"
-#include "RemoteMemoryOps.h"
+#include "RemoteMemoryOps.hpp"
 
 
 class KReader
@@ -60,7 +60,7 @@ public:
 			request.order = 1;
 			request.address = w_read;
 			request.size = sizeof(T);
-			response = gatewayClient.RemoteReadType(request);
+			response = gatewayClient.RemoteReadProcessMemory(request);
 		}
 
 		return (T)response.bytes;

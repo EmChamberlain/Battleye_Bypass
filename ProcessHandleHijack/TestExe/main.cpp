@@ -16,7 +16,7 @@ HANDLE getHandle(LPWSTR name)
 	{
 		while (Process32Next(snapshot, &entry) == TRUE)
 		{
-			if (_stricmp(entry.szExeFile, "flux.exe") == 0)
+			if (_stricmp(entry.szExeFile, "obs64.exe") == 0)
 			{
 				return OpenProcess(PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID);
 			}
@@ -28,7 +28,7 @@ HANDLE getHandle(LPWSTR name)
 
 int main() {
 	while (true) {
-		HANDLE targetProcessHandle = getHandle(L"flux.exe");
+		HANDLE targetProcessHandle = getHandle(L"obs64.exe");
 		Sleep(1000);
 		if(!targetProcessHandle)
 			CloseHandle(targetProcessHandle);

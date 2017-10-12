@@ -107,7 +107,8 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 
 int main()
 {
-	testKReader();
+	test();
+	//testKReader();
 	/*
 	// init a new GameDataParser instance
 	GameDataParser* GDParser;
