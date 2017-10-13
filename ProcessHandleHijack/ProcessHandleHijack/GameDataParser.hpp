@@ -35,6 +35,16 @@ public:
 	}
 
 
+	/*
+	* These vectors house the up to date aactors.
+	*/
+
+	std::vector<Player> players;
+	std::vector<Vehicle> vehicles;
+	std::vector<Item> items;
+
+
+
 private:
 
 	/*
@@ -214,13 +224,7 @@ private:
 	int32_t m_localTeam;
 	int64_t m_AActorPtr;
 
-	/*
-	* These vectors house the up to date aactors.
-	*/
-
-	std::vector<Player> players;
-	std::vector<Vehicle> vehicles;
-	std::vector<Item> items;
+	
 
 
 	/*

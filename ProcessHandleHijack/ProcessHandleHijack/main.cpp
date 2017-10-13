@@ -2,11 +2,18 @@
 #include <iostream>
 #include <thread>
 
+
+
 #include "GameDataParser.hpp"
 #include "LRadar.hpp"
 #include "KReader.hpp"
+#include "Window.hpp"
 
 using namespace std;
+
+
+GameDataParser* GDParser;
+LRadar* Radar;
 
 
 void test() {
@@ -120,26 +127,84 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 		}
 	}
 }
+// render function
+void render()
+{
+	
+	
+	
+	// clear the window alpha
+	d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);
+
+	
+
+	d3ddev->BeginScene();    // begins the 3D scene
+
+	
+							 //calculate and and draw esp stuff
+	Radar->render();
+
+
+	d3ddev->EndScene();    // ends the 3D scene
+
+	d3ddev->Present(NULL, NULL, NULL, NULL);   // displays the created frame on the screen
+}
+
+//set up overlay window
+void SetupWindow()
+{
+
+		
+	
+	WNDCLASSEX wc;
+
+	ZeroMemory(&wc, sizeof(WNDCLASSEX));
+
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = WindowProc;
+	wc.hInstance = GetModuleHandle(0);
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)RGB(0, 0, 0);
+	wc.lpszClassName = "Avast";
+	RegisterClassEx(&wc);
+	DWORD dwStyle = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
+	hWnd = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_WINDOWEDGE, wc.lpszClassName, "Avast", dwStyle, 0, 0, s_width, s_height, NULL, NULL, wc.hInstance, NULL);
+
+	ShowWindow(hWnd, SW_SHOW);
+	GetWindowRect(hWnd, &windowRect);
+	initD3D(hWnd);
+}
 
 
 int main()
 {
 	//test();
-	testKReader();
-	/*
+	//testKReader();
+	
+	
+
+	
+
+	
+		
+	
+	SetupWindow();
+
+	
 	// init a new GameDataParser instance
-	GameDataParser* GDParser;
+	
 	GDParser = new GameDataParser;
 
-	LRadar* Radar;
+	// init a new Radar instance
+	
 	Radar = new LRadar(GDParser);
 
-
+	/*
 	std::thread t1(readerLoop, GDParser, Radar);
 
 	std::string readLine = "";
 
-	// l33b user interface
 	while (readLine != "quit")
 	{
 		std::cin >> readLine;
@@ -167,6 +232,33 @@ int main()
 		readLine = "";
 	}
 	*/
+
+	MSG msg;
+
+	while (TRUE)
+	{
+		ZeroMemory(&msg, sizeof(MSG));
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (msg.message == WM_QUIT)
+			exit(0);
+		
+		
+
+		//render your esp
+		render();
+
+		Sleep(5);
+	}
+	return msg.wParam;
+
+
+
+	
 
 	return 0;
 }
