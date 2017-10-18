@@ -19,8 +19,9 @@ extern HWND hWnd;
 extern LPD3DXFONT pFont;
 extern ID3DXLine* d3dLine;
 extern LPDIRECT3DTEXTURE9 mapTexture;
+extern LPD3DXSPRITE mapSprite;
 extern RECT windowRect;
-extern D3DVIEWPORT9 viewport;
+extern D3DSURFACE_DESC surface;
 
 
 

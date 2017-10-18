@@ -139,9 +139,8 @@ void render()
 	
 
 	d3ddev->BeginScene();    // begins the 3D scene
-
 	
-							 //calculate and and draw esp stuff
+							 
 	Radar->render();
 
 

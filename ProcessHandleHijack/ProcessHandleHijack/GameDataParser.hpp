@@ -43,6 +43,25 @@ public:
 	std::vector<Vehicle> vehicles;
 	std::vector<Item> items;
 
+	/*
+	* Local variables
+	* These are updated once every read loop.
+	*/
+	int64_t m_UWorld;
+	int64_t m_gameInstance;
+	int64_t m_ULocalPlayer;
+	int64_t m_localPlayer;
+	int64_t m_viewportclient;
+	int64_t m_localPawn;
+	int64_t m_localPlayerState;
+	int64_t m_PWorld;
+	int64_t m_ULevel;
+	int64_t m_playerCount;
+	Vector3 m_localPlayerPosition;
+	int64_t m_localPlayerBasePointer;
+	int32_t m_localTeam;
+	int64_t m_AActorPtr;
+
 
 
 private:
@@ -205,24 +224,7 @@ private:
 	KReader* m_kReader;
 
 
-	/*
-	* Local variables
-	* These are updated once every read loop.
-	*/
-	int64_t m_UWorld;
-	int64_t m_gameInstance;
-	int64_t m_ULocalPlayer;
-	int64_t m_localPlayer;
-	int64_t m_viewportclient;
-	int64_t m_localPawn;
-	int64_t m_localPlayerState;
-	int64_t m_PWorld;
-	int64_t m_ULevel;
-	int64_t m_playerCount;
-	Vector3 m_localPlayerPosition;
-	int64_t m_localPlayerBasePointer;
-	int32_t m_localTeam;
-	int64_t m_AActorPtr;
+	
 
 	
 

@@ -13,8 +13,9 @@ HWND hWnd;
 LPD3DXFONT pFont;
 ID3DXLine* d3dLine;
 LPDIRECT3DTEXTURE9 mapTexture;
+LPD3DXSPRITE mapSprite;
 RECT windowRect;
-D3DVIEWPORT9 viewport;
+D3DSURFACE_DESC surface;
 
 
 
@@ -43,10 +44,17 @@ void initD3D(HWND hWnd)
 	D3DXCreateLine(d3ddev, &d3dLine);
 
 	D3DXCreateTextureFromFile(d3ddev, "map.jpg", &mapTexture);
+	mapTexture->GetLevelDesc(NULL, &surface);
+	D3DXCreateSprite(d3ddev, &mapSprite);
+
+	D3DXCreateFont(d3ddev, 10, 0, FW_NORMAL, 0, FALSE,
+		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+		"Tahoma", &pFont);
 }
 
 void cleanD3D()
 {
+	pFont->Release();
 	d3ddev->Release();    // close and release the 3D device
 	d3d->Release();    // close and release Direct3D
 }
