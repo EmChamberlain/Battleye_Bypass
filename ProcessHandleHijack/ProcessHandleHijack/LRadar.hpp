@@ -21,8 +21,6 @@ public:
 	
 	void render()
 	{
-		Vector3 mock_loc = { 813000 / 2, 813000 / 2, 0 };
-		Vector3 mock_enemy = { ((813000 / 2) + 10000.0), ((813000 / 2) + 20000.0), 0 };
 		float scaleRatio = 1.0;
 
 		D3DXVECTOR3 pos;
@@ -30,11 +28,8 @@ public:
 		pos.y = (s_height / 2)*(1 / scaleRatio);
 		pos.z = 0;
 		
-		Vector3 map_loc = coordsToMap(mock_loc);
-
-		
-		
-		D3DXMATRIX transMatrix = Translate(-1.0 * map_loc.X, -1.0 * map_loc.Y, 0);
+		Vector3 map_loc = coordsToMap(GDParser->m_localPlayerPosition);
+		D3DXMATRIX transMatrix = Translate((-1.0 * (map_loc.X - 60)), -1.0 * map_loc.Y, 0);
 		//D3DXMATRIX transMatrix = Translate(0, 0, 0);
 		D3DXMATRIX scaleMatrix;
 		D3DXMatrixScaling(&scaleMatrix, scaleRatio, scaleRatio, 1.0);
@@ -49,16 +44,20 @@ public:
 
 		float x = (s_width) / 2;
 		float y = (s_height) / 2;
-		
 
-		Vector3 mock_enemy_map_relative = coordsToMap(getRelativeCoords(mock_enemy));
-		DrawFilledCircle(x + mock_enemy_map_relative.X, y + mock_enemy_map_relative.Y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
+		/*for (Player p : GDParser->players)
+		{
+			Vector3 relative = coordsToMap(getRelativeCoords(p.loc));
+			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 0, 0, 0), pFont, "%d", p.team);
+		}
+
 		for (Player p : GDParser->players)
 		{
-			
-		}
+			Vector3 relative = coordsToMap(getRelativeCoords(p.loc));
+			DrawFilledCircle(x + relative.X, y + relative.Y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 0));
+		}*/
 		DrawFilledCircle(x, y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 255));// center dot (local player)
-		DrawString(x, y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%d", 0);
+		//DrawString(x, y, D3DCOLOR_ARGB(255, 0, 0, 0), pFont, "%d", GDParser->m_localTeam);
 	}
 
 

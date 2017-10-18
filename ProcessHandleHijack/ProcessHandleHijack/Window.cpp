@@ -43,11 +43,11 @@ void initD3D(HWND hWnd)
 	D3DXCreateFontA(d3ddev, 13, 0, FW_HEAVY, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont);
 	D3DXCreateLine(d3ddev, &d3dLine);
 
-	D3DXCreateTextureFromFile(d3ddev, "map.jpg", &mapTexture);
+	D3DXCreateTextureFromFile(d3ddev, "D:/pic.jpg", &mapTexture);
 	mapTexture->GetLevelDesc(NULL, &surface);
 	D3DXCreateSprite(d3ddev, &mapSprite);
 
-	D3DXCreateFont(d3ddev, 10, 0, FW_NORMAL, 0, FALSE,
+	D3DXCreateFont(d3ddev, 20, 0, FW_NORMAL, 0, FALSE,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
 		"Tahoma", &pFont);
 }
@@ -184,6 +184,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		
 		break;
 	case WM_DESTROY:
+		cleanD3D();
 		PostQuitMessage(0);
 		return 0;
 	}

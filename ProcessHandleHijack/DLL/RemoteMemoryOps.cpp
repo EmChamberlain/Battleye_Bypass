@@ -11,7 +11,7 @@ using namespace std;
 int HandleGatewayServer::Init(LPWSTR pName) {
 	processName = pName;
 	processHandle = get_handle_to_process(processName);
-	std::cout << "Handle: " << hex << processHandle << endl;
+	//std::cout << "Handle: " << hex << processHandle << endl;
 	
 	while (1) {
 		if (processHandle) {
@@ -39,7 +39,7 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 			}
 			else {
 				Sleep(1000);
-				std::cout << "ERROR ]> Strange process handle. GetLastError: " << dec << GetLastError() << endl;
+				//std::cout << "ERROR ]> Strange process handle. GetLastError: " << dec << GetLastError() << endl;
 				processHandle == NULL;
 				processHandle = get_handle_to_process(processName);
 				continue;
@@ -50,12 +50,12 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 			processHandle = get_handle_to_process(processName);
 			continue;
 		}
-		std::cout << "OK    ]> Pipe started. Awaiting clients." << endl;
+		//std::cout << "OK    ]> Pipe started. Awaiting clients." << endl;
 		//_tprintf(TEXT("\nPipe Server: Main thread awaiting client connection on %s\n"), m_lpszPipename);
 		m_pipeHandle = CreateNamedPipe(m_lpszPipename, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES, MAXPIPEFILESIZE, MAXPIPEFILESIZE, 2000, NULL);
 
 		if (m_pipeHandle == INVALID_HANDLE_VALUE) {
-			std::cout << "ERROR ]> CreateNamedPipe failed. GetLastError: " << dec << GetLastError() << endl;
+			//std::cout << "ERROR ]> CreateNamedPipe failed. GetLastError: " << dec << GetLastError() << endl;
 			return -1;
 		}
 		
@@ -71,7 +71,7 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 			//m_clientConnected = ConnectNamedPipe(m_pipeHandle, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 		
 		if (m_clientConnected) {
-			std::cout << "OK    ]> Client connected. Starting gateway." << endl;
+			//std::cout << "OK    ]> Client connected. Starting gateway." << endl;
 			processHandle = get_handle_to_process(processName);
 			HandleGatewayServer::Gateway();
 		}
@@ -100,10 +100,10 @@ int HandleGatewayServer::Gateway() {
 
 		if (!fSuccess || cbBytesRead == 0) {
 			if (GetLastError() == ERROR_BROKEN_PIPE) {
-				std::cout << "INFO  ]> Broken pipe (Client disconnected). GetLastError: " << dec << GetLastError() << endl;
+				//std::cout << "INFO  ]> Broken pipe (Client disconnected). GetLastError: " << dec << GetLastError() << endl;
 			}
 			else {
-				std::cout << "ERROR ]> ReadFile failed. GetLastError: " << dec << GetLastError() << endl;
+				//std::cout << "ERROR ]> ReadFile failed. GetLastError: " << dec << GetLastError() << endl;
 			}
 			break;
 		}
@@ -124,7 +124,7 @@ int HandleGatewayServer::Gateway() {
 	//HeapFree(hHeap, 0, request);
 	HeapFree(hHeap, 0, reply);
 
-	std::cout << "OK    ]> Gateway closing." << endl;
+	//std::cout << "OK    ]> Gateway closing." << endl;
 	return 1;
 }
 
@@ -144,29 +144,30 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 				{
 					if (!strcmp(szModName, "TslGame.exe"))
 					{
-						std::cout << hMods[i] << " : " << szModName << std::endl;
+						//std::cout << hMods[i] << " : " << szModName << std::endl;
 						lpBase = hMods[i];
-						std::cout << "Base Address: 0x" << (DWORD64)lpBase << std::endl;
+						//std::cout << "Base Address: 0x" << hex << (DWORD64)lpBase << std::endl;
 						break;
 					}
 				}
 				ZeroMemory(szModName, MAX_PATH);
 			}
 		}
-		response.status = (DWORD_PTR)lpBase;
+		response.val = (LONGLONG)lpBase;
+		response.status = (LONGLONG)lpBase;
 		if (response.status == 0) {
-			std::cout << "ERROR ]> FindBase failed!" << endl;
-			std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			//std::cout << "ERROR ]> FindBase failed!" << endl;
+			//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
 		}
 
 		BOOL fSuccess = FALSE;
 		DWORD bytesWritten = 0;
 		fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
 		if (!fSuccess) {
-			std::cout << "ERROR ]> WriteFile failed!" << endl;
+			//std::cout << "ERROR ]> WriteFile failed!" << endl;
 		}
 		else {
-			std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
 		}
 	}
 	else
@@ -180,18 +181,18 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
 			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
 			if (response.status == 0) {
-				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
-				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
 			}
 
 			BOOL fSuccess = FALSE;
 			DWORD bytesWritten = 0;
 			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
 			if (!fSuccess) {
-				std::cout << "ERROR ]> WriteFile failed!" << endl;
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
 			}
 			else {
-				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
 			}
 
 		}
@@ -204,18 +205,18 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
 			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
 			if (response.status == 0) {
-				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
-				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
 			}
 
 			BOOL fSuccess = FALSE;
 			DWORD bytesWritten = 0;
 			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
 			if (!fSuccess) {
-				std::cout << "ERROR ]> WriteFile failed!" << endl;
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
 			}
 			else {
-				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
 			}
 
 		}
@@ -228,24 +229,48 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
 			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
 			if (response.status == 0) {
-				std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
-				std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
 			}
 
 			BOOL fSuccess = FALSE;
 			DWORD bytesWritten = 0;
 			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
 			if (!fSuccess) {
-				std::cout << "ERROR ]> WriteFile failed!" << endl;
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
 			}
 			else {
-				std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
+		else if (request.order == 3)
+		{
+
+			RMOResponseRPMBytes response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
 			}
 
 		}
 		else
 		{
-			std::cout << "ERROR ]> Unknown order: " << request.order << endl;
+			//std::cout << "ERROR ]> Unknown order: " << request.order << endl;
 		}
 
 		

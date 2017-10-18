@@ -16,7 +16,7 @@ GameDataParser* GDParser;
 LRadar* Radar;
 
 
-void test() {
+/*void test() {
 	HandleGatewayClient gatewayClient;
 	gatewayClient.ConnectPipe();
 
@@ -43,7 +43,7 @@ void test() {
 			/*cout << "Memory address to read (in hexadecimal): ";
 			cin >> hex >> rpmRequest.address;
 			cout << "Size to read (bytes, in decimal): ";
-			cin >> dec >> rpmRequest.size;*/
+			cin >> dec >> rpmRequest.size;
 
 			rpmResponse = gatewayClient.RemoteReadProcessMemoryVec(rpmRequest);
 
@@ -77,8 +77,8 @@ void test() {
 
 	system("pause");
 
-}
-void testKReader()
+}*/
+/*void testKReader()
 {
 	KReader *reader = new KReader;
 	cout << sizeof(int64_t) << endl;
@@ -109,16 +109,15 @@ void testKReader()
 	delete reader;
 
 	std::system("pause");
-}
+}*/
 
-void readerLoop(GameDataParser* w_reader, LRadar* radar)
+/*void readerLoop(GameDataParser* w_reader, LRadar* radar)
 {
 	while (1)
 	{
 		if (readLoop)
 		{
 			w_reader->readLoop();
-			radar->render();
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		else
@@ -126,7 +125,7 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
-}
+}*/
 // render function
 void render()
 {
@@ -165,10 +164,10 @@ void SetupWindow()
 	wc.hInstance = GetModuleHandle(0);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)RGB(0, 0, 0);
-	wc.lpszClassName = "Avast";
+	wc.lpszClassName = "PUMyWindowBG";
 	RegisterClassEx(&wc);
 	DWORD dwStyle = (WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
-	hWnd = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_WINDOWEDGE, wc.lpszClassName, "Avast", dwStyle, 0, 0, s_width, s_height, NULL, NULL, wc.hInstance, NULL);
+	hWnd = CreateWindowEx(WS_EX_APPWINDOW | WS_EX_WINDOWEDGE, wc.lpszClassName, "PUMyWindowBG", dwStyle, 0, 0, s_width, s_height, NULL, NULL, wc.hInstance, NULL);
 
 	ShowWindow(hWnd, SW_SHOW);
 	GetWindowRect(hWnd, &windowRect);
@@ -190,7 +189,6 @@ int main()
 	
 	SetupWindow();
 
-	
 	// init a new GameDataParser instance
 	
 	GDParser = new GameDataParser;
@@ -199,38 +197,35 @@ int main()
 	
 	Radar = new LRadar(GDParser);
 
-	/*
-	std::thread t1(readerLoop, GDParser, Radar);
-
-	std::string readLine = "";
-
-	while (readLine != "quit")
+	//std::thread t1(readerLoop, GDParser, Radar);
+	
+	/*d::string readLine = "";
+	while (readLine != "q")
 	{
 		std::cin >> readLine;
 		if (readLine == "start" && readLoop == false && GDParser->getPUBase())
 		{
 			readLoop = true;
-			std::cout << "Starting read loop" << std::endl;
+			std::cout << "Starting rloop" << std::endl;
 		}
 
 		if (readLine == "stop")
 		{
 			readLoop = false;
-			std::cout << "Stopping read loop" << std::endl;
+			std::cout << "Stopping rloop" << std::endl;
 		}
 
 		if (readLine == "base")
 		{
-			std::cout << "Base set to: " << GDParser->readPUBase() << std::endl;
+			std::cout << "Base:" << GDParser->readPUBase() << std::endl;
 		}
 
-		if (readLine == "exit" || readLine == "quit")
+		if (readLine == "q")
 		{
 			break;
 		}
 		readLine = "";
-	}
-	*/
+	}*/
 
 	MSG msg;
 
@@ -244,20 +239,20 @@ int main()
 		}
 
 		if (msg.message == WM_QUIT)
+		{
+			//t1.join();
 			exit(0);
-		
-		
-
-		//render your esp
+		}
+		//render shit here
+		GDParser->readLoop();
 		render();
-
-		Sleep(5);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+	
 	return msg.wParam;
 
 
 
 	
 
-	return 0;
 }

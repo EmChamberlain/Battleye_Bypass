@@ -49,6 +49,13 @@ struct RMOResponseRPMVec {
 	Vector3 val;
 };
 
+struct RMOResponseRPMBytes {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	byte val[BUFSIZE];
+};
+
 
 struct RMORequestRPM {
 	int order = 0;

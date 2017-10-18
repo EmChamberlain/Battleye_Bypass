@@ -20,6 +20,8 @@ public:
 
 	void readLoop()
 	{
+		if (getPUBase() == 0)
+			readPUBase();
 		readLocals();
 		readPlayers();
 	}
@@ -89,12 +91,11 @@ private:
 
 				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
 				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
-				// actorLocation.Z += ReadAny<int>(PWorld + 0x920, PROTO_NORMAL_READ);
+				actorLocation.Z += m_kReader->readType32(m_PWorld + 0x920, PROTO_NORMAL_READ);
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
 				players.push_back(Player(actorTeam, actorLocation));
 			}
-
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
@@ -197,7 +198,7 @@ private:
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x37D7818, PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x37E4918, PROTO_NORMAL_READ);
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
@@ -206,7 +207,7 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3C0, PROTO_NORMAL_READ);
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);
-		m_playerCount = m_kReader->readType64(m_ULevel + 0xA8, PROTO_NORMAL_READ);
+		m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//changed from 64 to 32
 
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
 		m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);

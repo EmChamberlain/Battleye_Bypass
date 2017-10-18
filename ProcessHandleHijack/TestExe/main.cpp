@@ -1,6 +1,8 @@
-#include <Windows.h>
-#include <tlhelp32.h>
+#include <windows.h>
+#include <vector>
+#include <string>
 #include <iostream>
+#include <tlhelp32.h>
 #include <psapi.h>
 
 using namespace std;
@@ -16,7 +18,7 @@ HANDLE getHandle(LPWSTR name)
 	{
 		while (Process32Next(snapshot, &entry) == TRUE)
 		{
-			if (_stricmp(entry.szExeFile, "obs64.exe") == 0)
+			if (_stricmp(entry.szExeFile, "TslGame.exe") == 0)
 			{
 				return OpenProcess(PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID);
 			}
@@ -27,8 +29,9 @@ HANDLE getHandle(LPWSTR name)
 
 
 int main() {
+	
 	while (true) {
-		HANDLE targetProcessHandle = getHandle(L"obs64.exe");
+		HANDLE targetProcessHandle = getHandle(L"TslGame.exe");
 		Sleep(1000);
 		if(!targetProcessHandle)
 			CloseHandle(targetProcessHandle);

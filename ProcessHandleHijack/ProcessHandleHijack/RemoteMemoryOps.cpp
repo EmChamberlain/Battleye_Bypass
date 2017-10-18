@@ -1,7 +1,7 @@
 #include "RemoteMemoryOps.hpp"
 
 
-bool readLoop = false;
+bool readLoop = true;
 
 // ugly to define the wanted items / player gnames this way.
 std::vector<std::string> playerGNameVec = { "PlayerMale", "PlayerFemale" };
@@ -20,18 +20,18 @@ int HandleGatewayClient::ConnectPipe() {
 			break; // Break if the pipe handle is valid. 
 
 		if (GetLastError() != ERROR_PIPE_BUSY) { // Exit if an error other than ERROR_PIPE_BUSY occurs. 
-			cout << "Could not open pipe. GetLastError: " << dec << GetLastError() << endl;
+			//cout << "Could not open pipe. GetLastError: " << dec << GetLastError() << endl;
 			return -1;
 		}
 
 		// All pipe instances are busy, so wait. 
 		if (!WaitNamedPipe(m_lpszPipename, PIPEWAITTIMOUTIFBUSY)) {
-			cout << "Could not open pipe: 20 second wait timed out." << endl;
+			//cout << "Could not open pipe: 20 second wait timed out." << endl;
 			return -1;
 		}
 	}
 
-	cout << "Pipe connected." << endl;
+	cout << "P conn." << endl;
 
 	HandleGatewayClient::SetPipeMode(PIPE_READMODE_BYTE);
 
@@ -44,27 +44,27 @@ int HandleGatewayClient::SetPipeMode(DWORD mode) {
 	BOOL fSuccess = FALSE;
 	fSuccess = SetNamedPipeHandleState(m_pipeHandle, &mode, NULL, NULL);
 	if (!fSuccess) {
-		cout << "SetNamedPipeHandleState failed. GetLastError: " << GetLastError() << endl;
+		//cout << "SetNamedPipeHandleState failed. GetLastError: " << GetLastError() << endl;
 		return -1;
 	}
 
-	cout << "Pipe mode set." << endl;
+	cout << "P mode set." << endl;
 	return 0;
 }
 
 bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest) {
-	cout << "Sending RPM request (" << sizeof(rpmRequest) << " bytes) message." << endl;
+	//cout << "Sending RPM request (" << sizeof(rpmRequest) << " bytes) message." << endl;
 
 	BOOL fSuccess = FALSE;
 	DWORD bytesWritten = 0;
 	fSuccess = WriteFile(m_pipeHandle, &rpmRequest, sizeof(rpmRequest), &bytesWritten, NULL);
-	cout << "Address: " << hex << rpmRequest.address << " Size: " << dec << rpmRequest.size << endl;
+	//cout << "Address: " << hex << rpmRequest.address << " Size: " << dec << rpmRequest.size << endl;
 	if (!fSuccess) {
-		cout << "WriteFile to pipe failed. GetLastError: " << dec << GetLastError() << endl;
+		cout << "WFile failed, Error: " << dec << GetLastError() << endl;
 		return false;
 	}
 
-	cout << "Request sent (" << bytesWritten << " bytes written)." << endl;
+	//cout << "Request sent (" << bytesWritten << " bytes written)." << endl;
 
 	return true;
 }
@@ -83,7 +83,7 @@ RMOResponseRPM64 HandleGatewayClient::ReceiveReadProcessMemory64() {
 	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 
 	if (!fSuccess)
-		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
 
 	return response;
 }
@@ -112,7 +112,7 @@ RMOResponseRPM32 HandleGatewayClient::ReceiveReadProcessMemory32() {
 	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 
 	if (!fSuccess)
-		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
 
 	return response;
 }
@@ -141,7 +141,7 @@ RMOResponseRPMVec HandleGatewayClient::ReceiveReadProcessMemoryVec() {
 	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 
 	if (!fSuccess)
-		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
 
 	return response;
 }
@@ -162,7 +162,7 @@ RMOResponseRPMBytes HandleGatewayClient::ReceiveReadProcessMemoryBytes() {
 	DWORD bytesRead = 0;
 
 	do { // Read from the pipe.
-		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM64), &bytesRead, NULL);
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPMBytes), &bytesRead, NULL);
 
 		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
 			break;
@@ -170,14 +170,14 @@ RMOResponseRPMBytes HandleGatewayClient::ReceiveReadProcessMemoryBytes() {
 	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 
 	if (!fSuccess)
-		cout << "ReadFile failed while receiving ReadProcessMemory output. GetLastError: " << dec << GetLastError() << endl;
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
 
 	return response;
 }
 
 RMOResponseRPMBytes HandleGatewayClient::RemoteReadProcessMemoryBytes(RMORequestRPM rpmRequest) {
 	RMOResponseRPMBytes response;
-	rpmRequest.order = 0;
+	rpmRequest.order = 3;
 	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
 		response = HandleGatewayClient::ReceiveReadProcessMemoryBytes();
 	}

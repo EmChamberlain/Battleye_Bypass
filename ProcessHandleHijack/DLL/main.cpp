@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
+#include <vector>
 
 #include "handles.h"
 #include "RemoteMemoryOps.hpp"
@@ -31,8 +32,11 @@ DWORD WINAPI MainThread(LPVOID lpParam)
 	cout << "Attached to console." << endl;
 	
 	HandleGatewayServer handleGatewayServer;
-	handleGatewayServer.Init(L"obs64.exe");
-	//handleGatewayServer.Init(L"TslGame.exe");
+	//handleGatewayServer.Init(L"obs64.exe");
+	//wstring gameNameStr = wstring(wstring(L"Ts") + wstring(L"lG") + wstring(L"ame") + wstring(L".e") + wstring(L"xe"));
+	//vector<wchar_t> buf(gameNameStr.begin(), gameNameStr.end());
+	//buf.push_back(0);
+	handleGatewayServer.Init(L"TslGame.exe");
 	
 	FreeLibraryAndExitThread(NULL, EXIT_SUCCESS);
 }

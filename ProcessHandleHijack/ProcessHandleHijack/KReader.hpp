@@ -24,24 +24,17 @@ public:
 	*/
 	int64_t readPUBase()
 	{
-		int64_t base = 0;
-		// get the base address
-		/*
 		RMORequestRPM request;
-		ResponseType<int64_t> response;
+		RMOResponseRPM64 response;
 		request.order = 1;
-		request.address = NULL;
+		request.address = 0;
 		request.size = sizeof(int64_t);
 		request.base = true;
-		response = gatewayClient.RemoteReadProcessMemory(request);
-
-		base = (uint64_t)response.bytes;
-		if (base)
-		{
-			m_PUBase = base;
-		}*/
-
-		return base;
+		response = gatewayClient.RemoteReadProcessMemory64(request);
+		//m_PUBase = 0x7ff712590000;
+		//return 0x7ff712590000;
+		m_PUBase = response.val;
+		return response.val;
 	}
 
 	/*template<typename T>
@@ -154,16 +147,16 @@ public:
 	// returns a string, if this method fails, returns "FAIL"
 	std::string getGNameFromId(const int32_t& w_id)
 	{
-		int64_t GNames = readType64(m_PUBase + 0x36DA610, PROTO_NORMAL_READ);
+		int64_t GNames = readType64(m_PUBase + 0x36E7710, PROTO_NORMAL_READ);
 		int64_t singleNameChunk = readType64(GNames + (w_id / 0x4000) * 8, PROTO_NORMAL_READ);
 		int64_t singleNamePtr = readType64(singleNameChunk + 8 * (w_id % 0x4000), PROTO_NORMAL_READ);
 
 		char* name;
 		RMOResponseRPMBytes *response = readSize(singleNamePtr + 16, 64, PROTO_NORMAL_READ);
-		if ((name = (char*)(response->val)) != NULL)
+		name = (char*)(response->val);
+		if (response != NULL)
 		{
 			std::string s = std::string(name);
-			delete name;
 			delete response;
 			return s;
 		}

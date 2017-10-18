@@ -32,4 +32,5 @@ void DrawLine(float x, float y, float xx, float yy, D3DCOLOR color);
 void DrawBox(float x, float y, float width, float height, D3DCOLOR color);
 void DrawFilledCircle(float x, float y, float rad, float rotate, int type, int resolution, DWORD color);
 void initD3D(HWND hWnd);
+void cleanD3D();
 void render();
