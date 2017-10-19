@@ -246,7 +246,7 @@ int main()
 		//render shit here
 		GDParser->readLoop();
 		render();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
 	
 	return msg.wParam;

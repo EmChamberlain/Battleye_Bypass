@@ -4,6 +4,7 @@
 #include "GameDataParser.hpp"
 #include "Window.hpp"
 
+# define M_PI           3.14159265358979323846  /* pi */
 
 class LRadar
 {
@@ -28,8 +29,16 @@ public:
 		pos.y = (s_height / 2)*(1 / scaleRatio);
 		pos.z = 0;
 		
-		Vector3 map_loc = coordsToMap(GDParser->m_localPlayerPosition);
-		D3DXMATRIX transMatrix = Translate((-1.0 * (map_loc.X - 60)), -1.0 * map_loc.Y, 0);
+		
+		Vector3 currentPos = GDParser->m_localPlayerPosition;
+		currentPos.X += float(GDParser->m_XOriginLocation);
+		currentPos.Y += float(GDParser->m_YOriginLocation);
+		
+		
+
+
+		Vector3 map_loc = coordsToMap(currentPos);
+		D3DXMATRIX transMatrix = Translate((-1.0 * (map_loc.X)), -1.0 * (map_loc.Y), 0);
 		//D3DXMATRIX transMatrix = Translate(0, 0, 0);
 		D3DXMATRIX scaleMatrix;
 		D3DXMatrixScaling(&scaleMatrix, scaleRatio, scaleRatio, 1.0);
@@ -45,19 +54,20 @@ public:
 		float x = (s_width) / 2;
 		float y = (s_height) / 2;
 
-		/*for (Player p : GDParser->players)
+		for (Player p : GDParser->players)
 		{
-			Vector3 relative = coordsToMap(getRelativeCoords(p.loc));
+			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 0, 0, 0), pFont, "%d", p.team);
 		}
 
 		for (Player p : GDParser->players)
 		{
-			Vector3 relative = coordsToMap(getRelativeCoords(p.loc));
+			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
 			DrawFilledCircle(x + relative.X, y + relative.Y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 0));
-		}*/
+		}
 		DrawFilledCircle(x, y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 255));// center dot (local player)
-		//DrawString(x, y, D3DCOLOR_ARGB(255, 0, 0, 0), pFont, "%d", GDParser->m_localTeam);
+		Vector3 dir = getDirection();
+		DrawLine(x, y, x + (dir.X * playerRad*3), y + (dir.Y * playerRad*3), D3DCOLOR_ARGB(255, 255, 0, 255));
 	}
 
 
@@ -69,10 +79,11 @@ private:
 	GameDataParser *GDParser = nullptr;
 	static const int playerRad = 3;
 	static const int playerRes = 5;
-	const int gameMapWidth = 813000; 
-	const int gameMapHeight = 813000;
+	const int gameMapWidth = 819200;
+	const int gameMapHeight = 819200;
 	const int gameMapMeterWidth = 8000;
 	const int gameMapMeterHeight = 8000;
+	
 
 	
 	D3DXMATRIX Translate(const float dx, const float dy, const float dz) {
@@ -95,19 +106,30 @@ private:
 		return toReturn;
 	}
 
-	Vector3 getRelativeCoords(Vector3 coords)
+	Vector3 getRelativeCoords(Vector3 origin, Vector3 coords)
 	{
 		Vector3 toReturn;
-		toReturn.X = coords.X - GDParser->m_localPlayerPosition.X;
-		toReturn.Y = coords.Y - GDParser->m_localPlayerPosition.Y;
-		toReturn.Z = coords.Z - GDParser->m_localPlayerPosition.Z;
+		toReturn.X = coords.X - origin.X;
+		toReturn.Y = coords.Y - origin.Y;
+		toReturn.Z = coords.Z - origin.Z;
 		/*toReturn.X = coords.X - 813000 / 2.0;
 		toReturn.Y = coords.Y - 813000 / 2.0;
 		toReturn.Z = coords.Z - 0;*/
 		return toReturn;
 	}
 	
-
-
+	float distance(Vector3 a, Vector3 b)
+	{
+		return (a.X - b.X)*(a.X - b.X) + (a.Y - b.Y)*(a.Y - b.Y) + (a.Z - b.Z)*(a.Z - b.Z);
+	}
+	Vector3 getDirection()
+	{
+		Vector3 toReturn;
+		Vector3 rot = GDParser->m_playerCameraRotation;
+		toReturn.X = cosf(rot.Y * M_PI / 180.0);
+		toReturn.Y = sinf(rot.Y * M_PI / 180.0);
+		toReturn.Z = 0.0;
+		return toReturn;
+	}
 
 };

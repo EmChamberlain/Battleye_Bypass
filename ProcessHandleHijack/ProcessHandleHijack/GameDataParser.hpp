@@ -63,6 +63,11 @@ public:
 	int64_t m_localPlayerBasePointer;
 	int32_t m_localTeam;
 	int64_t m_AActorPtr;
+	int32_t m_XOriginLocation;
+	int32_t m_YOriginLocation;
+	int64_t m_playerController;
+	int64_t m_playerCameraManager;
+	Vector3 m_playerCameraRotation;
 
 
 
@@ -73,6 +78,9 @@ private:
 	*/
 	void readPlayers()
 	{
+		players.clear();
+		vehicles.clear();
+		items.clear();
 		for (int i = 0; i < m_playerCount; i++)
 		{
 			// read the position of Player
@@ -215,6 +223,13 @@ private:
 		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0444, PROTO_NORMAL_READ);
 
 		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);
+
+		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
+		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+
+		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);
+		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x438, PROTO_NORMAL_READ);
+		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x42C, PROTO_NORMAL_READ);
 	}
 
 

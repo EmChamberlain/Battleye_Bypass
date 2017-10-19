@@ -14,42 +14,7 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 	//std::cout << "Handle: " << hex << processHandle << endl;
 	
 	while (1) {
-		if (processHandle) {
-			TCHAR buffer[MAX_PATH];
-			if (GetModuleBaseName(processHandle, NULL, buffer, MAX_PATH)) {
-				WCHAR temp[MAX_PATH];
-				mbstowcs(temp, buffer, MAX_PATH);
-
-				wstring handleStr = wstring(temp);
-				wstring processStr = wstring(processName);
-				//wcout << "HandleStr: " << temp << endl;
-				//wcout << "ProcessStr: " << processName << endl;
-				if (handleStr != processStr) {
-					Sleep(1000);
-					processHandle = NULL;
-					processHandle = get_handle_to_process(processName);
-					continue;
-				}
-			}
-			else if (GetLastError() == EXCEPTION_INVALID_HANDLE){
-				Sleep(1000);
-				processHandle == NULL;
-				processHandle = get_handle_to_process(processName);
-				continue;
-			}
-			else {
-				Sleep(1000);
-				//std::cout << "ERROR ]> Strange process handle. GetLastError: " << dec << GetLastError() << endl;
-				processHandle == NULL;
-				processHandle = get_handle_to_process(processName);
-				continue;
-			}
-		}
-		else {
-			Sleep(1000);
-			processHandle = get_handle_to_process(processName);
-			continue;
-		}
+		
 		//std::cout << "OK    ]> Pipe started. Awaiting clients." << endl;
 		//_tprintf(TEXT("\nPipe Server: Main thread awaiting client connection on %s\n"), m_lpszPipename);
 		m_pipeHandle = CreateNamedPipe(m_lpszPipename, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES, MAXPIPEFILESIZE, MAXPIPEFILESIZE, 2000, NULL);
@@ -73,6 +38,44 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 		if (m_clientConnected) {
 			//std::cout << "OK    ]> Client connected. Starting gateway." << endl;
 			processHandle = get_handle_to_process(processName);
+			
+			/*if (processHandle) {
+				TCHAR buffer[MAX_PATH];
+				if (GetModuleBaseName(processHandle, NULL, buffer, MAX_PATH)) {
+					WCHAR temp[MAX_PATH];
+					mbstowcs(temp, buffer, MAX_PATH);
+
+					wstring handleStr = wstring(temp);
+					wstring processStr = wstring(processName);
+					//wcout << "HandleStr: " << temp << endl;
+					//wcout << "ProcessStr: " << processName << endl;
+					if (handleStr != processStr) {
+						Sleep(1000);
+						processHandle = NULL;
+						processHandle = get_handle_to_process(processName);
+						continue;
+					}
+				}
+				else if (GetLastError() == EXCEPTION_INVALID_HANDLE) {
+					Sleep(1000);
+					processHandle == NULL;
+					processHandle = get_handle_to_process(processName);
+					continue;
+				}
+				else {
+					Sleep(1000);
+					//std::cout << "ERROR ]> Strange process handle. GetLastError: " << dec << GetLastError() << endl;
+					processHandle == NULL;
+					processHandle = get_handle_to_process(processName);
+					continue;
+				}
+			}
+			else {
+				Sleep(1000);
+				processHandle = get_handle_to_process(processName);
+				continue;
+			}*/
+			
 			HandleGatewayServer::Gateway();
 		}
 		else {
@@ -81,7 +84,10 @@ int HandleGatewayServer::Init(LPWSTR pName) {
 		}
 		CloseHandle(m_pipeHandle); // The client is gone so reset pipe. 
 		m_clientConnected = FALSE;
+
+		
 	}
+
 
 	return 0;
 }

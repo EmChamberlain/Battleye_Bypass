@@ -74,7 +74,7 @@ void DrawLine(float x, float y, float xx, float yy, D3DCOLOR color)
 {
 	D3DXVECTOR2 dLine[2];
 
-	d3dLine->SetWidth(1.f);
+	d3dLine->SetWidth(2.f);
 
 	dLine[0].x = x;
 	dLine[0].y = y;
