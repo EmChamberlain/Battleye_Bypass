@@ -63,11 +63,17 @@ public:
 		for (Player p : GDParser->players)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
-			DrawFilledCircle(x + relative.X, y + relative.Y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 0));
+			D3DCOLOR color = NULL;
+			if (p.team == GDParser->m_localTeam)
+				color = D3DCOLOR_ARGB(255, 0, 255, 0);
+			else
+				color = D3DCOLOR_ARGB(255, 255, 0, 0);
+			DrawFilledCircle(x + relative.X, y + relative.Y, playerRad, 360, 0, playerRes, color);
 		}
 		DrawFilledCircle(x, y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 255));// center dot (local player)
 		Vector3 dir = getDirection();
-		DrawLine(x, y, x + (dir.X * playerRad*3), y + (dir.Y * playerRad*3), D3DCOLOR_ARGB(255, 255, 0, 255));
+		int dirScale = max(s_width, s_height);
+		DrawLine(x, y, x + (dir.X * dirScale), y + (dir.Y * dirScale), D3DCOLOR_ARGB(255, 255, 0, 255));
 	}
 
 
