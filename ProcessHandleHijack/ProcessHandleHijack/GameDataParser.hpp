@@ -211,7 +211,8 @@ private:
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
 		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);
-		m_localPawn = m_kReader->readType64(m_localPlayer + 0x3A8, PROTO_NORMAL_READ);
+		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//added this
+		m_localPawn = m_kReader->readType64(m_playerController + 0x3A8, PROTO_NORMAL_READ);//changed this from m_localPlayer
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3C0, PROTO_NORMAL_READ);
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);
@@ -227,7 +228,6 @@ private:
 		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
 		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
-		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);
 		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x438, PROTO_NORMAL_READ);
 		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x42C, PROTO_NORMAL_READ);
 	}
