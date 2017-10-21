@@ -54,6 +54,21 @@ public:
 		float x = (s_width) / 2;
 		float y = (s_height) / 2;
 
+
+		for (Vehicle v : GDParser->vehicles)
+		{
+			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, v.loc));
+			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", v.name);
+			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
+		}
+
+		for (Item i : GDParser->items)
+		{
+			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, i.loc));
+			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", i.name);
+			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
+		}
+
 		for (Player p : GDParser->players)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
@@ -73,7 +88,7 @@ public:
 		DrawFilledCircle(x, y, playerRad, 360, 0, playerRes, D3DCOLOR_ARGB(255, 255, 0, 255));// center dot (local player)
 		Vector3 dir = getDirection();
 		int dirScale = max(s_width, s_height);
-		DrawLine(x, y, x + (dir.X * dirScale), y + (dir.Y * dirScale), D3DCOLOR_ARGB(255, 255, 0, 255));
+		DrawLine(x, y, x + (dir.X * dirScale), y + (dir.Y * dirScale), D3DCOLOR_ARGB(255, 255, 0, 255));// direction aiming
 	}
 
 
