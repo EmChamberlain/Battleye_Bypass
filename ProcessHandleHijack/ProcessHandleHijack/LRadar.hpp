@@ -54,28 +54,44 @@ public:
 		float x = (s_width) / 2;
 		float y = (s_height) / 2;
 
+		std::vector<Player> *players;
+		std::vector<Vehicle> *vehicles;
+		std::vector<Item> *items;
 
-		for (Vehicle v : GDParser->vehicles)
+		if(GDParser->writingVectors)
+		{
+			players = GDParser->playersOld;
+			vehicles = GDParser->vehiclesOld;
+			items = GDParser->itemsOld;
+		}
+		else
+		{
+			players = GDParser->players;
+			vehicles = GDParser->vehicles;
+			items = GDParser->items;
+		}
+		
+		for (Vehicle v : *vehicles)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, v.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", v.name);
 			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
 		}
-
-		for (Item i : GDParser->items)
+		
+		for (Item i : *items)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, i.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", i.name);
 			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
 		}
-
-		for (Player p : GDParser->players)
+		
+		for (Player p : *players)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 0, 0, 0), pFont, "%d", p.team);
 		}
-
-		for (Player p : GDParser->players)
+		
+		for (Player p : *players)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, p.loc));
 			D3DCOLOR color = NULL;

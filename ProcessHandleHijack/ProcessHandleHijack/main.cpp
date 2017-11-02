@@ -111,21 +111,21 @@ LRadar* Radar;
 	std::system("pause");
 }*/
 
-/*void readerLoop(GameDataParser* w_reader, LRadar* radar)
+void readerLoop(GameDataParser* w_reader, LRadar* radar)
 {
 	while (1)
 	{
 		if (readLoop)
 		{
 			w_reader->readLoop();
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 		else
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
-}*/
+}
 // render function
 void render()
 {
@@ -197,7 +197,7 @@ int main()
 	
 	Radar = new LRadar(GDParser);
 
-	//std::thread t1(readerLoop, GDParser, Radar);
+	
 	
 	/*d::string readLine = "";
 	while (readLine != "q")
@@ -227,6 +227,8 @@ int main()
 		readLine = "";
 	}*/
 
+	std::thread t1(readerLoop, GDParser, Radar);
+	
 	MSG msg;
 
 	while (TRUE)
@@ -244,9 +246,9 @@ int main()
 			exit(0);
 		}
 		//render shit here
-		GDParser->readLoop();
+		//GDParser->readLoop();
 		render();
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 	
 	return msg.wParam;

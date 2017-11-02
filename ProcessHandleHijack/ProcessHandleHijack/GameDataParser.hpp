@@ -40,10 +40,13 @@ public:
 	/*
 	* These vectors house the up to date aactors.
 	*/
-
-	std::vector<Player> players;
-	std::vector<Vehicle> vehicles;
-	std::vector<Item> items;
+	bool writingVectors = false;
+	std::vector<Player> *players;
+	std::vector<Vehicle> *vehicles;
+	std::vector<Item> *items;
+	std::vector<Player> *playersOld;
+	std::vector<Vehicle> *vehiclesOld;
+	std::vector<Item> *itemsOld;
 
 	/*
 	* Local variables
@@ -78,9 +81,9 @@ private:
 	*/
 	void readPlayers()
 	{
-		players.clear();
-		vehicles.clear();
-		items.clear();
+		std::vector<Player> *playersTemp = new std::vector<Player>();
+		std::vector<Vehicle> *vehiclesTemp = new std::vector<Vehicle>();
+		std::vector<Item> *itemsTemp = new std::vector<Item>();
 		for (int i = 0; i < m_playerCount; i++)
 		{
 			// read the position of Player
@@ -102,7 +105,7 @@ private:
 				actorLocation.Z += m_kReader->readType32(m_PWorld + 0x920, PROTO_NORMAL_READ);
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
-				players.push_back(Player(actorTeam, actorLocation));
+				playersTemp->push_back(Player(actorTeam, actorLocation));
 			}
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
@@ -127,14 +130,11 @@ private:
 					{
 						if (itemName.substr(0, it->first.length()) == it->first)
 						{
-							int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
-							Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
-
 							actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
 							actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
 							//w_data["items"].emplace_back(json::object({ { "n", it->second },{ "x", droppedLocation.X },{ "y", droppedLocation.Y } }));
-							items.push_back(Item(it->second, droppedLocation));
+							itemsTemp->push_back(Item(it->second, droppedLocation));
 						}
 					}
 				}
@@ -150,7 +150,7 @@ private:
 				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", "Drop" },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
-				vehicles.push_back(Vehicle("Drop", actorLocation));
+				vehiclesTemp->push_back(Vehicle("Drop", actorLocation));
 
 			}
 
@@ -199,14 +199,26 @@ private:
 				std::string carName = m_kReader->getGNameFromId(curActorID);
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
-				vehicles.push_back(Vehicle(carName.substr(0, 3), actorLocation));
+				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
 			}
 		}
+		writingVectors = true;
+		delete playersOld;
+		delete vehiclesOld;
+		delete itemsOld;
+		playersOld = players;
+		vehiclesOld = vehicles;
+		itemsOld = items;
+		players = playersTemp;
+		vehicles = vehiclesTemp;
+		items = itemsTemp;
+		writingVectors = false;
+
 	}
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x37e5988, PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x37E6988, PROTO_NORMAL_READ);
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
