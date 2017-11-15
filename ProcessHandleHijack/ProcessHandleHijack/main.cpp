@@ -113,7 +113,7 @@ LRadar* Radar;
 
 void readerLoop(GameDataParser* w_reader, LRadar* radar)
 {
-	while (1)
+	while (true)
 	{
 		if (readLoop)
 		{
