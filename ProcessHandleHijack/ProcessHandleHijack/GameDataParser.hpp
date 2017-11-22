@@ -63,7 +63,7 @@ public:
 	int64_t m_ULevel;
 	int64_t m_playerCount;
 	Vector3 m_localPlayerPosition;
-	int64_t m_localPlayerBasePointer;
+	//int64_t m_localPlayerBasePointer;
 	int32_t m_localTeam;
 	int64_t m_AActorPtr;
 	int32_t m_XOriginLocation;
@@ -95,11 +95,11 @@ private:
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
-				int32_t actorTeam = m_kReader->readType32(playerState + 0x0444, PROTO_NORMAL_READ);
+				int32_t actorTeam = m_kReader->readType32(playerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -110,11 +110,11 @@ private:
 			}
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
-				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2D8, PROTO_NORMAL_READ);
-				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x2E0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
+				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
+				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2E0, PROTO_NORMAL_READ);//unsigned char    UnknownData14[0xA0] //0x2D8 live server
+				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x2E8, PROTO_NORMAL_READ);//0x2E0 live server
 
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
@@ -143,9 +143,9 @@ private:
 
 			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
+				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -191,8 +191,8 @@ private:
 			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -219,31 +219,31 @@ private:
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);//0x37E6988 for live
-		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);
-		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
-		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
-		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);
-		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//added this
-		m_localPawn = m_kReader->readType64(m_playerController + 0x3A8, PROTO_NORMAL_READ);//changed this from m_localPlayer
-		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3C0, PROTO_NORMAL_READ);
-		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);
-		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);
-		m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//changed from 64 to 32
+		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
+		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance     
+		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
+		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);//UPlayer
+		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);//UGameViewportClient
+		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//APlayerController
+		m_localPawn = m_kReader->readType64(m_playerController + 0x03B8, PROTO_NORMAL_READ);//APawn //0x3A8 live server
+		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server
+		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
+		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel
+		m_playerCount = m_kReader->readType32(m_ULevel + 0xB8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 live server    changed from 64 to 32
 
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
-		m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
+		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
-		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0444, PROTO_NORMAL_READ);
+		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server 
 
-		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);
+		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xB0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 live server
 
-		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
-		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x920, PROTO_NORMAL_READ);
+		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x928, PROTO_NORMAL_READ);//0x918 live server
+		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x92C, PROTO_NORMAL_READ);//0x91C live server
+		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x930, PROTO_NORMAL_READ);//0x920 live server
 
-		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x438, PROTO_NORMAL_READ);
-		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x42C, PROTO_NORMAL_READ);
+		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x448, PROTO_NORMAL_READ);//APlayerCameraManager //0x438 live server
+		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x42C live server
 	}
 
 
