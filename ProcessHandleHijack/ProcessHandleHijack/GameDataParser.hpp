@@ -68,6 +68,7 @@ public:
 	int64_t m_AActorPtr;
 	int32_t m_XOriginLocation;
 	int32_t m_YOriginLocation;
+	int32_t m_ZOriginLocation;
 	int64_t m_playerController;
 	int64_t m_playerCameraManager;
 	Vector3 m_playerCameraRotation;
@@ -100,9 +101,9 @@ private:
 
 				int32_t actorTeam = m_kReader->readType32(playerState + 0x0444, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
-				actorLocation.Z += m_kReader->readType32(m_PWorld + 0x920, PROTO_NORMAL_READ);
+				actorLocation.X += m_XOriginLocation;
+				actorLocation.Y += m_YOriginLocation;
+				actorLocation.Z += m_ZOriginLocation;
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
 				playersTemp->push_back(Player(actorTeam, actorLocation));
@@ -119,8 +120,8 @@ private:
 				{
 					int64_t ADroppedItem = m_kReader->readType64(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
 					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x1E0, PROTO_NORMAL_READ);
-					droppedLocation.X = droppedLocation.X + actorLocation.X + m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+					droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
+					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
 					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x448, PROTO_NORMAL_READ);
 					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
 					std::string itemName = m_kReader->getGNameFromId(UItemID);
@@ -130,8 +131,8 @@ private:
 					{
 						if (itemName.substr(0, it->first.length()) == it->first)
 						{
-							actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-							actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+							actorLocation.X += m_XOriginLocation;
+							actorLocation.Y += m_YOriginLocation;
 
 							//w_data["items"].emplace_back(json::object({ { "n", it->second },{ "x", droppedLocation.X },{ "y", droppedLocation.Y } }));
 							itemsTemp->push_back(Item(it->second, droppedLocation));
@@ -146,8 +147,8 @@ private:
 				int64_t playerState = m_kReader->readType64(curActor + 0x3C0, PROTO_NORMAL_READ);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+				actorLocation.X += m_XOriginLocation;
+				actorLocation.Y += m_YOriginLocation;
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", "Drop" },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehiclesTemp->push_back(Vehicle("Drop", actorLocation));
@@ -193,8 +194,8 @@ private:
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x180, PROTO_NORMAL_READ);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x1A0, PROTO_NORMAL_READ);
 
-				actorLocation.X += m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
-				actorLocation.Y += m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+				actorLocation.X += m_XOriginLocation;
+				actorLocation.Y += m_YOriginLocation;
 
 				std::string carName = m_kReader->getGNameFromId(curActorID);
 
@@ -218,7 +219,7 @@ private:
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x3CA74A8, PROTO_NORMAL_READ);//0x37E6988 for live
+		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);//0x37E6988 for live
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);
@@ -239,6 +240,7 @@ private:
 
 		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x918, PROTO_NORMAL_READ);
 		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x91C, PROTO_NORMAL_READ);
+		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x920, PROTO_NORMAL_READ);
 
 		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x438, PROTO_NORMAL_READ);
 		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x42C, PROTO_NORMAL_READ);
