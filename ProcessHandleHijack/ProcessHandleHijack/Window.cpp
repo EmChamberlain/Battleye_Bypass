@@ -12,10 +12,13 @@ LPDIRECT3DDEVICE9 d3ddev;
 HWND hWnd;
 LPD3DXFONT pFont;
 ID3DXLine* d3dLine;
-LPDIRECT3DTEXTURE9 mapTexture;
+LPDIRECT3DTEXTURE9 mapTextureMiramar;
+LPDIRECT3DTEXTURE9 mapTextureErangel;
+D3DSURFACE_DESC surfaceMiramar;
+D3DSURFACE_DESC surfaceErangel;
 LPD3DXSPRITE mapSprite;
 RECT windowRect;
-D3DSURFACE_DESC surface;
+
 
 
 
@@ -43,8 +46,12 @@ void initD3D(HWND hWnd)
 	D3DXCreateFontA(d3ddev, 13, 0, FW_HEAVY, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont);
 	D3DXCreateLine(d3ddev, &d3dLine);
 
-	D3DXCreateTextureFromFile(d3ddev, "D:/pic.jpg", &mapTexture);
-	mapTexture->GetLevelDesc(NULL, &surface);
+	D3DXCreateTextureFromFile(d3ddev, "D:/pic_mir.png", &mapTextureMiramar);//png for miramar
+	mapTextureMiramar->GetLevelDesc(NULL, &surfaceMiramar);
+
+
+	D3DXCreateTextureFromFile(d3ddev, "D:/pic_er.jpg", &mapTextureErangel);//png for erangel
+	mapTextureErangel->GetLevelDesc(NULL, &surfaceErangel);
 	D3DXCreateSprite(d3ddev, &mapSprite);
 
 	D3DXCreateFont(d3ddev, 20, 0, FW_NORMAL, 0, FALSE,

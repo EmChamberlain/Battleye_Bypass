@@ -126,6 +126,20 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 		}
 	}
 }
+void inputLoop(LRadar* radar)
+{
+	while(true)
+	{
+		char letter;
+		cin >> letter;
+		if (letter == 'M')
+			radar->miramarBool = true;
+		else if (letter == 'E')
+			radar->miramarBool = false;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+	
+}
 // render function
 void render()
 {
@@ -227,7 +241,8 @@ int main()
 		readLine = "";
 	}*/
 
-	std::thread t1(readerLoop, GDParser, Radar);
+	//std::thread t1(readerLoop, GDParser, Radar);
+	std::thread t1(inputLoop, Radar);
 	
 	MSG msg;
 
@@ -245,8 +260,10 @@ int main()
 			//t1.join();
 			exit(0);
 		}
+		
+
 		//render shit here
-		//GDParser->readLoop();
+		GDParser->readLoop();
 		render();
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}

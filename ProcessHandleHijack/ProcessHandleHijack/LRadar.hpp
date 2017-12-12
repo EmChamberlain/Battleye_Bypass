@@ -48,7 +48,10 @@ public:
 		mapSprite->SetTransform(&resultMatrix);
 
 		mapSprite->Begin(NULL);
-		mapSprite->Draw(mapTexture, NULL, NULL, &pos, 0xFFFFFFFF);
+		if(miramarBool)
+			mapSprite->Draw(mapTextureMiramar, NULL, NULL, &pos, 0xFFFFFFFF);
+		else
+			mapSprite->Draw(mapTextureErangel, NULL, NULL, &pos, 0xFFFFFFFF);
 		mapSprite->End();
 
 		float x = (s_width) / 2;
@@ -71,7 +74,7 @@ public:
 			items = GDParser->items;
 		}
 		
-		for (Vehicle v : *vehicles)
+		/*for (Vehicle v : *vehicles)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, v.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", v.name);
@@ -83,7 +86,7 @@ public:
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, i.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", i.name);
 			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
-		}
+		}*/
 		
 		for (Player p : *players)
 		{
@@ -106,7 +109,7 @@ public:
 		int dirScale = max(s_width, s_height);
 		DrawLine(x, y, x + (dir.X * dirScale), y + (dir.Y * dirScale), D3DCOLOR_ARGB(255, 255, 0, 255));// direction aiming
 	}
-
+	bool miramarBool = true;
 
 
 
@@ -135,8 +138,8 @@ private:
 
 	Vector3 coordsToMap(Vector3 coords)
 	{
-		static float mapGameWidthRatio = float(surface.Width) / float(gameMapWidth);
-		static float mapGameHeightRatio = float(surface.Height) / float(gameMapHeight);
+		static float mapGameWidthRatio = float(surfaceMiramar.Width) / float(gameMapWidth);
+		static float mapGameHeightRatio = float(surfaceMiramar.Height) / float(gameMapHeight);
 		Vector3 toReturn;
 		toReturn.X = coords.X * mapGameWidthRatio;
 		toReturn.Y = coords.Y * mapGameHeightRatio;

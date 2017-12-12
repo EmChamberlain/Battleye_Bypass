@@ -66,12 +66,14 @@ public:
 	//int64_t m_localPlayerBasePointer;
 	int32_t m_localTeam;
 	int64_t m_AActorPtr;
+	Vector3 m_originVector;
 	int32_t m_XOriginLocation;
 	int32_t m_YOriginLocation;
 	int32_t m_ZOriginLocation;
 	int64_t m_playerController;
 	int64_t m_playerCameraManager;
 	Vector3 m_playerCameraRotation;
+	Vector3 m_localPlayerPositionCamera;
 
 
 
@@ -89,13 +91,14 @@ private:
 		{
 			// read the position of Player
 			int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
-			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);
+			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);// 0x0018 live server
 			std::string actorGName = m_kReader->getGNameFromId(curActorID);
+			
 
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
@@ -108,7 +111,7 @@ private:
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
 				playersTemp->push_back(Player(actorTeam, actorLocation));
 			}
-			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
+			/*else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
@@ -139,9 +142,10 @@ private:
 						}
 					}
 				}
-			}
-
-			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
+			}*/
+			
+			
+			/*else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
@@ -153,7 +157,7 @@ private:
 				//w_data["vehicles"].emplace_back(json::object({ { "v", "Drop" },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehiclesTemp->push_back(Vehicle("Drop", actorLocation));
 
-			}
+			}*/
 
 			else if (std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
 			{
@@ -177,7 +181,7 @@ private:
 					}
 
 					// iterate thru vehicleGNameVec
-					for (std::vector<std::string>::iterator it = vehicleGNameVec.begin(); it != vehicleGNameVec.end(); ++it)
+					/*for (std::vector<std::string>::iterator it = vehicleGNameVec.begin(); it != vehicleGNameVec.end(); ++it)
 					{
 						//check if the name is same, and add it to the vehicleIDs vector
 						if (*it == actorGName.substr(0, (*it).length()))
@@ -185,10 +189,10 @@ private:
 							vehicleIDs.push_back(curActorID);
 							break;
 						}
-					}
+					}*/
 				}
 			}
-			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
+			/*else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
@@ -201,6 +205,10 @@ private:
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
+			}*/
+			else if(allIDs.size() > 25000)
+			{
+				allIDs.clear();
 			}
 		}
 		writingVectors = true;
@@ -220,30 +228,34 @@ private:
 	void readLocals()
 	{
 		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
-		m_gameInstance = m_kReader->readType64(m_UWorld + 0x140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance     
+		m_gameInstance = m_kReader->readType64(m_UWorld + 0x0140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance    //0x140 test?
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);//UPlayer
 		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);//UGameViewportClient
 		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//APlayerController
-		m_localPawn = m_kReader->readType64(m_playerController + 0x03B8, PROTO_NORMAL_READ);//APawn //0x3A8 live server
-		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server
+		m_localPawn = m_kReader->readType64(m_playerController + 0x0428, PROTO_NORMAL_READ);//APawn //0x3A8 live server //0x3B8 test?
+		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel
-		m_playerCount = m_kReader->readType32(m_ULevel + 0xB8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 live server    changed from 64 to 32
+		m_playerCount = m_kReader->readType32(m_ULevel + 0xB8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 live server //0xB8 test?    changed from 64 to 32
 
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
 		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
-		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server 
+		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server //0x047C test?
 
-		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xB0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 live server
+		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xB0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 live server //0xB0 test?
 
 		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x928, PROTO_NORMAL_READ);//0x918 live server
 		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x92C, PROTO_NORMAL_READ);//0x91C live server
 		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x930, PROTO_NORMAL_READ);//0x920 live server
-
+		
 		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x448, PROTO_NORMAL_READ);//APlayerCameraManager //0x438 live server
-		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x42C live server
+		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo
+		
+		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);
+
+
 	}
 
 

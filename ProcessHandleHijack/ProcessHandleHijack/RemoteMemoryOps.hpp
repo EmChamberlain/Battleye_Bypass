@@ -17,9 +17,8 @@ extern std::vector<std::string> playerGNameVec;
 extern std::vector<std::string> vehicleGNameVec;
 extern std::map<std::string, std::string> dropGNameMap;
 
-#define UWORLD 0x3F98A00 //0x3CA74A8  live server
-#define GNAMES 0x3E7B238 //0x3BAA290  live server
-
+#define UWORLD 0x3FC7C60 //0x3F98A00  prev
+#define GNAMES 0x3EAA3B8 //0x3E7B238  prev
 
 #define PIPEWAITTIMOUTIFBUSY 20000
 

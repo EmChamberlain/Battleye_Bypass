@@ -18,10 +18,13 @@ extern LPDIRECT3DDEVICE9 d3ddev;
 extern HWND hWnd;
 extern LPD3DXFONT pFont;
 extern ID3DXLine* d3dLine;
-extern LPDIRECT3DTEXTURE9 mapTexture;
+extern LPDIRECT3DTEXTURE9 mapTextureMiramar;
+extern LPDIRECT3DTEXTURE9 mapTextureErangel;
+extern D3DSURFACE_DESC surfaceMiramar;
+extern D3DSURFACE_DESC surfaceErangel;
 extern LPD3DXSPRITE mapSprite;
 extern RECT windowRect;
-extern D3DSURFACE_DESC surface;
+
 
 
 
