@@ -91,28 +91,32 @@ private:
 		{
 			// read the position of Player
 			int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
+			if (curActor == NULL)
+				continue;
 			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);// 0x0018 live server
-			std::string actorGName = m_kReader->getGNameFromId(curActorID);
+			if (curActorID == NULL)
+				continue;
 			
-
+			
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
-				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
+				
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
-
+				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
 				int32_t actorTeam = m_kReader->readType32(playerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
 				actorLocation.Z += m_ZOriginLocation;
 
-				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z }*/ }));
+				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z } }));
 				playersTemp->push_back(Player(actorTeam, actorLocation));
 			}
 			/*else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
+				
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
@@ -143,8 +147,6 @@ private:
 					}
 				}
 			}*/
-			
-			
 			/*else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
@@ -158,11 +160,24 @@ private:
 				vehiclesTemp->push_back(Vehicle("Drop", actorLocation));
 
 			}*/
+			/*else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
+			{
+				// tästä alaspäin voi tehdä if-lohkoissa
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
 
-			else if (std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
+				actorLocation.X += m_XOriginLocation;
+				actorLocation.Y += m_YOriginLocation;
+
+				std::string carName = m_kReader->getGNameFromId(curActorID);
+
+				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
+				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
+			}*/
+			/*else if(std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
 			{
 				allIDs.push_back(curActorID);
-
+				std::string actorGName = m_kReader->getGNameFromId(curActorID);
 				if (actorGName == "FAIL")
 				{
 					continue;
@@ -181,7 +196,7 @@ private:
 					}
 
 					// iterate thru vehicleGNameVec
-					/*for (std::vector<std::string>::iterator it = vehicleGNameVec.begin(); it != vehicleGNameVec.end(); ++it)
+					for (std::vector<std::string>::iterator it = vehicleGNameVec.begin(); it != vehicleGNameVec.end(); ++it)
 					{
 						//check if the name is same, and add it to the vehicleIDs vector
 						if (*it == actorGName.substr(0, (*it).length()))
@@ -189,26 +204,44 @@ private:
 							vehicleIDs.push_back(curActorID);
 							break;
 						}
-					}*/
+					}
+				}
+			}*/
+			else
+			{
+				std::string actorGName = m_kReader->getGNameFromId(curActorID);
+				if (actorGName == "FAIL")
+				{
+					continue;
+				}
+				else
+				{
+					// iterate thru playerGnameVec
+					for (std::vector<std::string>::iterator it = playerGNameVec.begin(); it != playerGNameVec.end(); ++it)
+					{
+						//check if the name is same, and add it to the playerIDs vector
+						if (*it == actorGName.substr(0, (*it).length()))
+						{
+							playerIDs.push_back(curActorID);
+							break;
+						}
+					}
+
+					
 				}
 			}
-			/*else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
-			{
-				// tästä alaspäin voi tehdä if-lohkoissa
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
-
-				actorLocation.X += m_XOriginLocation;
-				actorLocation.Y += m_YOriginLocation;
-
-				std::string carName = m_kReader->getGNameFromId(curActorID);
-
-				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
-				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
-			}*/
-			else if(allIDs.size() > 25000)
+			
+			
+			
+			/*if(allIDs.size() > 2500)
 			{
 				allIDs.clear();
+				std::cout << "Clearing aids" << std::endl;
+			}*/
+			if(playerIDs.size() > 10)
+			{
+				playerIDs.clear();
+				std::cout << "Clearing pids" << std::endl;
 			}
 		}
 		writingVectors = true;
