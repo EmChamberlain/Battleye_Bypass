@@ -20,6 +20,14 @@ struct Vector3
 	float Y;
 	float Z;
 };
+struct EncryptedActor
+{
+	uint64_t ptr_table[0x2B];
+	uint16_t index;
+	byte  unk2[0x6];
+	uint16_t xor;
+	byte  unk3[0x6];
+};
 
 
 
@@ -54,6 +62,13 @@ struct RMOResponseRPMBytes {
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	byte val[BUFSIZE];
+};
+
+struct RMOResponseRPMActor {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	EncryptedActor encrActor;
 };
 
 

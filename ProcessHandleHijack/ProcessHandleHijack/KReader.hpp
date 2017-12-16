@@ -114,6 +114,25 @@ public:
 
 		return response.val;
 	}
+	EncryptedActor readTypeActor(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPMActor response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(EncryptedActor);
+			response = gatewayClient.RemoteReadProcessMemoryActor(request);
+		}
+
+		return response.encrActor;
+	}
 
 	// caution: if you use this method, you need to delete the allocated heap from where ever you called this method from
 	RMOResponseRPMBytes* readSize(const int64_t& w_read, const int32_t& w_readSize, const PROTO_MESSAGE& w_protoMsg)

@@ -62,3 +62,12 @@ struct Item
 	}
 };
 
+struct EncryptedActor
+{
+	uint64_t ptr_table[0x2B];
+	uint16_t index;
+	byte  unk2[0x6];
+	uint16_t xor;
+	byte  unk3[0x6];
+};
+

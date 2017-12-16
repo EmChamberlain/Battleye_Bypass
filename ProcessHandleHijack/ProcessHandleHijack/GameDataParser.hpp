@@ -4,6 +4,9 @@
 #include <deque>
 #include <vector>
 
+
+
+
 class GameDataParser
 {
 public:
@@ -74,6 +77,7 @@ public:
 	int64_t m_playerCameraManager;
 	Vector3 m_playerCameraRotation;
 	Vector3 m_localPlayerPositionCamera;
+	int64_t m_encryptionTable;
 
 
 
@@ -82,6 +86,10 @@ private:
 	/*
 	* PRIVATE CLASS FUNCTIONS
 	*/
+	int64_t shittyDecrypt(int i)
+	{
+		
+	}
 	void readPlayers()
 	{
 		std::vector<Player> *playersTemp = new std::vector<Player>();
@@ -89,6 +97,62 @@ private:
 		std::vector<Item> *itemsTemp = new std::vector<Item>();
 		for (int i = 0; i < m_playerCount; i++)
 		{
+
+			/*EncryptedActor encrActor = m_kReader->readTypeActor(m_AActorPtr + (i * sizeof(EncryptedActor)), PROTO_NORMAL_READ);
+			
+			DWORD decoded_xor = encrActor.xor ^ 0xCBAC;
+			DWORD decoded_Index = encrActor.index ^ 0xD7AF5ABC;
+
+			auto Xor1 = m_kReader->readType32(m_encryptionTable + 4*((byte)(decoded_Index)+0x300), PROTO_NORMAL_READ);
+			auto Xor2 = m_kReader->readType32(m_encryptionTable + 4*((byte)((DWORD_PTR)decoded_Index >> 0x8) + 0x200), PROTO_NORMAL_READ);
+			auto Xor3 = m_kReader->readType32(m_encryptionTable + 4*((byte)((DWORD_PTR)decoded_Index >> 0x10) + 0x100), PROTO_NORMAL_READ);
+			auto Xor4 = m_kReader->readType32(m_encryptionTable + 4*((DWORD_PTR)(decoded_Index >> 0x18)), PROTO_NORMAL_READ);
+			auto Real_Index = (Xor1^Xor2^Xor3^~Xor4) % 0x2B;
+			if (decoded_xor == 0 || decoded_Index == 0 || Xor1 == 0 || Xor2 == 0 || Xor3 == 0 || Xor4 == 0 || Real_Index == 0)
+			{
+				std::cout << decoded_xor << ":" << decoded_Index << ":" << Xor1 << ":" << Xor2 << ":" << Xor3 << ":" << Xor4 << ":" << Real_Index << std::endl;
+				char trash;
+				std::cin >> trash;
+			}
+			int64_t curActor = encrActor.ptr_table[Real_Index] ^ decoded_xor;
+			*/
+
+
+			//this is complete shit, need to find a way to do it with the encryptionTable
+			/*int64_t curActor;
+			int32_t curActorID;
+			std::string actorGName;
+
+			EncryptedActor encrActor = m_kReader->readTypeActor(m_AActorPtr + (i * sizeof(EncryptedActor)), PROTO_NORMAL_READ);
+			uint16_t decoded_xor = encrActor.xor ^ 0xCBAC;
+			
+			for (int j = 0; j < 0x2B; j++)
+			{
+				if (0xFFFFF < encrActor.ptr_table[j] < 0xFFFFFFFFFFF)
+				{
+					curActor = encrActor.ptr_table[j] ^ (int64_t)(decoded_xor);
+					curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);
+					actorGName = m_kReader->getGNameFromId(curActorID);
+					if (actorGName != "None" && actorGName != "FAIL")
+					{
+						std::cout << actorGName << std::endl;
+						for (std::vector<std::string>::iterator it = playerGNameVec.begin(); it != playerGNameVec.end(); ++it)
+						{
+							//check if the name is same, and add it to the playerIDs vector
+							if (*it == actorGName.substr(0, (*it).length()))
+							{
+								std::cout << actorGName << std::endl;
+								char trash;
+								std::cin >> trash;
+								break;
+							}
+						}
+						
+					}
+						
+				}
+			}*/
+
 			// read the position of Player
 			int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
 			if (curActor == NULL)
@@ -96,14 +160,14 @@ private:
 			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);// 0x0018 live server
 			if (curActorID == NULL)
 				continue;
-			
+			std::string actorGName = m_kReader->getGNameFromId(curActorID);
 			
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
 				
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
 				int32_t actorTeam = m_kReader->readType32(playerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server
 
@@ -146,8 +210,8 @@ private:
 						}
 					}
 				}
-			}*/
-			/*else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
+			}
+			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
@@ -159,8 +223,8 @@ private:
 				//w_data["vehicles"].emplace_back(json::object({ { "v", "Drop" },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehiclesTemp->push_back(Vehicle("Drop", actorLocation));
 
-			}*/
-			/*else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
+			}
+			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
@@ -173,8 +237,8 @@ private:
 
 				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
 				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
-			}*/
-			/*else if(std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
+			}
+			else if(std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
 			{
 				allIDs.push_back(curActorID);
 				std::string actorGName = m_kReader->getGNameFromId(curActorID);
@@ -209,7 +273,7 @@ private:
 			}*/
 			else
 			{
-				std::string actorGName = m_kReader->getGNameFromId(curActorID);
+				
 				if (actorGName == "FAIL")
 				{
 					continue;
@@ -233,11 +297,11 @@ private:
 			
 			
 			
-			/*if(allIDs.size() > 2500)
+			if(allIDs.size() > 5000)
 			{
 				allIDs.clear();
 				std::cout << "Clearing aids" << std::endl;
-			}*/
+			}
 			if(playerIDs.size() > 10)
 			{
 				playerIDs.clear();
@@ -288,6 +352,7 @@ private:
 		
 		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);
 
+		m_encryptionTable = m_kReader->readType64(m_kReader->getPUBase() + ETABLE, PROTO_NORMAL_READ);
 
 	}
 
