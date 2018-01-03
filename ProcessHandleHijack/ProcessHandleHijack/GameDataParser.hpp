@@ -169,7 +169,7 @@ private:
 				
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
-				int32_t actorTeam = m_kReader->readType32(playerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server
+				int32_t actorTeam = m_kReader->readType32(playerState + 0x0484, PROTO_NORMAL_READ);//0x047C live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -339,7 +339,7 @@ private:
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
 		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
-		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x047C, PROTO_NORMAL_READ);//0x0444 live server //0x047C test?
+		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0484, PROTO_NORMAL_READ);//0x047C live server //0x047C test?
 
 		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xB0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 live server //0xB0 test?
 

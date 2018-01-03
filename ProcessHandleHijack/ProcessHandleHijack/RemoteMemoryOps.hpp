@@ -17,9 +17,9 @@ extern std::vector<std::string> playerGNameVec;
 extern std::vector<std::string> vehicleGNameVec;
 extern std::map<std::string, std::string> dropGNameMap;
 
-#define UWORLD 0x3FF3940 // sig = 48 89 05 ? ? ? ? 0F 28 D6
-#define GNAMES 0x3ED5EB8 // sig = 75 BB 48 8B 35 ? ? ? ? 41 0F B7 C4
-#define ETABLE 0x3EDE850  //GObjsAddress ? // sig = 48 8d 0d ? ? ? ? c6 05 ? ? ? ? 01 e8 ? ? ? ? c6
+#define UWORLD 0x40211D0 // sig = 48 89 05 ? ? ? ? 0F 28 D6
+#define GNAMES 0x3F036C8 // sig = 75 BB 48 8B 35 ? ? ? ? 41 0F B7 C4
+#define ETABLE 0x3F0C080  //GObjsAddress ? // sig = 48 8d 0d ? ? ? ? c6 05 ? ? ? ? 01 e8 ? ? ? ? c6
 
 #define PIPEWAITTIMOUTIFBUSY 20000
 
