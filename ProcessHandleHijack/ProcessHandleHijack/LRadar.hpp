@@ -74,7 +74,7 @@ public:
 			items = GDParser->items;
 		}
 		
-		/*for (Vehicle v : *vehicles)
+		for (Vehicle v : *vehicles)
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, v.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", v.name);
@@ -85,8 +85,8 @@ public:
 		{
 			Vector3 relative = coordsToMap(getRelativeCoords(currentPos, i.loc));
 			DrawString(x + relative.X, y + relative.Y, D3DCOLOR_ARGB(255, 255, 255, 255), pFont, "%s", i.name);
-			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 0, 0, 255));
-		}*/
+			DrawFilledCircle(x + relative.X, y + relative.Y, 2, 360, 0, playerRes, D3DCOLOR_ARGB(255, 128, 0, 200));
+		}
 		
 		for (Player p : *players)
 		{

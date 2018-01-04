@@ -166,34 +166,31 @@ private:
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
-				
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);//0x3C0 live server
 				int32_t actorTeam = m_kReader->readType32(playerState + 0x0484, PROTO_NORMAL_READ);//0x047C live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
-				actorLocation.Z += m_ZOriginLocation;
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z } }));
 				playersTemp->push_back(Player(actorTeam, actorLocation));
 			}
-			/*else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
+			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
 				
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
-				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2E0, PROTO_NORMAL_READ);//unsigned char    UnknownData14[0xA0] //0x2D8 live server
-				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x2E8, PROTO_NORMAL_READ);//0x2E0 live server
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);
+				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2E8, PROTO_NORMAL_READ);//unsigned char    UnknownData14[0xA0] //0x2D8 live server
+				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x2F0, PROTO_NORMAL_READ);//0x2E0 live server
 
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
 					int64_t ADroppedItem = m_kReader->readType64(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
-					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x1E0, PROTO_NORMAL_READ);
-					droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
-					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
-					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x448, PROTO_NORMAL_READ);
+					//Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x2D0, PROTO_NORMAL_READ);
+					//droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
+					//droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
+					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x538, PROTO_NORMAL_READ);
 					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
 					std::string itemName = m_kReader->getGNameFromId(UItemID);
 
@@ -206,16 +203,15 @@ private:
 							actorLocation.Y += m_YOriginLocation;
 
 							//w_data["items"].emplace_back(json::object({ { "n", it->second },{ "x", droppedLocation.X },{ "y", droppedLocation.Y } }));
-							itemsTemp->push_back(Item(it->second, droppedLocation));
+							itemsTemp->push_back(Item(it->second, actorLocation));
 						}
 					}
 				}
 			}
 			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox")
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
-				int64_t playerState = m_kReader->readType64(curActor + 0x3D0, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -227,21 +223,18 @@ private:
 			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x188, PROTO_NORMAL_READ);
-				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x280, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0188, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
 
-				std::string carName = m_kReader->getGNameFromId(curActorID);
-
 				//w_data["vehicles"].emplace_back(json::object({ { "v", carName.substr(0, 3) },{ "x", actorLocation.X },{ "y", actorLocation.Y } }));
-				vehiclesTemp->push_back(Vehicle(carName.substr(0, 3), actorLocation));
+				vehiclesTemp->push_back(Vehicle(actorGName.substr(0, 6), actorLocation));
 			}
 			else if(std::find(allIDs.begin(), allIDs.end(), curActorID) == allIDs.end())
 			{
 				allIDs.push_back(curActorID);
-				std::string actorGName = m_kReader->getGNameFromId(curActorID);
 				if (actorGName == "FAIL")
 				{
 					continue;
@@ -270,8 +263,8 @@ private:
 						}
 					}
 				}
-			}*/
-			else
+			}
+			/*else
 			{
 				
 				if (actorGName == "FAIL")
@@ -293,7 +286,7 @@ private:
 
 					
 				}
-			}
+			}*/
 			
 			
 			
