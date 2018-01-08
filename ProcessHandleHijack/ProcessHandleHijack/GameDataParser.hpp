@@ -187,9 +187,9 @@ private:
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
 					int64_t ADroppedItem = m_kReader->readType64(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
-					//Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x2D0, PROTO_NORMAL_READ);
-					//droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
-					//droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
+					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x2D0, PROTO_NORMAL_READ);
+					droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
+					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
 					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x538, PROTO_NORMAL_READ);
 					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
 					std::string itemName = m_kReader->getGNameFromId(UItemID);
@@ -199,11 +199,11 @@ private:
 					{
 						if (itemName.substr(0, it->first.length()) == it->first)
 						{
-							actorLocation.X += m_XOriginLocation;
-							actorLocation.Y += m_YOriginLocation;
+							//actorLocation.X += m_XOriginLocation;
+							//actorLocation.Y += m_YOriginLocation;
 
 							//w_data["items"].emplace_back(json::object({ { "n", it->second },{ "x", droppedLocation.X },{ "y", droppedLocation.Y } }));
-							itemsTemp->push_back(Item(it->second, actorLocation));
+							itemsTemp->push_back(Item(it->second, droppedLocation));
 						}
 					}
 				}
@@ -327,14 +327,14 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel
-		m_playerCount = m_kReader->readType32(m_ULevel + 0xB8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 live server //0xB8 test?    changed from 64 to 32
 
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
 		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
 		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0484, PROTO_NORMAL_READ);//0x047C live server //0x047C test?
 
-		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xB0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 live server //0xB0 test?
+		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
+		m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
 		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x928, PROTO_NORMAL_READ);//0x918 live server
 		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x92C, PROTO_NORMAL_READ);//0x91C live server
@@ -345,7 +345,14 @@ private:
 		
 		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);
 
-		m_encryptionTable = m_kReader->readType64(m_kReader->getPUBase() + ETABLE, PROTO_NORMAL_READ);
+		/*m_weaponProcessor = m_kReader->readType64(m_localPawn + 0xA48, PROTO_NORMAL_READ);
+		m_currentWeaponIndex = m_kReader->readType32(m_weaponProcessor + 0x4C8, PROTO_NORMAL_READ);
+		m_equippedWeapons = m_kReader->readType64(m_weaponProcessor + 0x4B8, PROTO_NORMAL_READ);
+		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_m_currentWeaponIndex * 8), PROTO_NORMAL_READ);*/
+
+
+
+		//m_encryptionTable = m_kReader->readType64(m_kReader->getPUBase() + ETABLE, PROTO_NORMAL_READ);
 
 	}
 
