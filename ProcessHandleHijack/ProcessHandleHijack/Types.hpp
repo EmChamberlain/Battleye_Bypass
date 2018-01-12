@@ -4,13 +4,13 @@
 #include <vector>
 #include <map>
 
-using byte = BYTE;
+/*using byte = BYTE;
 using uint64_t = ULONGLONG;
 using int64_t = LONGLONG;
 using uint32_t = UINT32;
 using int32_t = INT32;
 using uint16_t = USHORT;
-using int16_t = SHORT;
+using int16_t = SHORT;*/
 
 
 enum PROTO_MESSAGE {

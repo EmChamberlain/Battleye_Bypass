@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "Types.hpp"
+#include "def.h"
 
 extern bool readLoop;
 
@@ -17,9 +18,9 @@ extern std::vector<std::string> playerGNameVec;
 extern std::vector<std::string> vehicleGNameVec;
 extern std::map<std::string, std::string> dropGNameMap;
 
-#define UWORLD 0x40211D0 // sig = 48 89 05 ? ? ? ? 0F 28 D6
-#define GNAMES 0x3F036C8 // sig = 75 BB 48 8B 35 ? ? ? ? 41 0F B7 C4
-#define ETABLE 0x3F0C080  //GObjsAddress ? // sig = 48 8d 0d ? ? ? ? c6 05 ? ? ? ? 01 e8 ? ? ? ? c6
+#define UWORLD 0x4054650 // sig = 48 89 05 ? ? ? ? 0F 28 D6
+#define GNAMES 0x3F36940 // sig = 75 BB 48 8B 35 ? ? ? ? 41 0F B7 C4
+//#define ETABLE 0x3F0C080  //GObjsAddress ? // sig = 48 8d 0d ? ? ? ? c6 05 ? ? ? ? 01 e8 ? ? ? ? c6
 
 #define PIPEWAITTIMOUTIFBUSY 20000
 
@@ -31,10 +32,19 @@ extern std::map<std::string, std::string> dropGNameMap;
 #define RMO_ORDER_READPROCESSMEMORY 1
 #define RMO_ORDER_WRITEPROCESSMEMORY 2
 
+typedef struct int128 {
+	int64 low;
+	int64 high;
+} int128;
 
 
-
-
+typedef struct RMOResponseRPM128 RMOResponseRPM128;
+struct RMOResponseRPM128 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	int128 val;
+};
 
 typedef struct RMOResponseRPM64 RMOResponseRPM64;
 struct RMOResponseRPM64 {
@@ -52,6 +62,14 @@ struct RMOResponseRPM32 {
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	INT32 val;
+};
+
+typedef struct RMOResponseRPM8 RMOResponseRPM8;
+struct RMOResponseRPM8 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT8 val;
 };
 
 
@@ -120,11 +138,17 @@ public:
 
 	// Functions to ReadProcessMemory remotely
 	bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest);
+	RMOResponseRPM128 HandleGatewayClient::ReceiveReadProcessMemory128();
+	RMOResponseRPM128 HandleGatewayClient::RemoteReadProcessMemory128(RMORequestRPM rpmRequest);
+
 	RMOResponseRPM64 HandleGatewayClient::ReceiveReadProcessMemory64();
 	RMOResponseRPM64 HandleGatewayClient::RemoteReadProcessMemory64(RMORequestRPM rpmRequest); 
 
 	RMOResponseRPM32 HandleGatewayClient::ReceiveReadProcessMemory32();
 	RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rpmRequest);
+
+	RMOResponseRPM8 HandleGatewayClient::ReceiveReadProcessMemory8();
+	RMOResponseRPM8 HandleGatewayClient::RemoteReadProcessMemory8(RMORequestRPM rpmRequest);
 
 	RMOResponseRPMVec HandleGatewayClient::ReceiveReadProcessMemoryVec();
 	RMOResponseRPMVec HandleGatewayClient::RemoteReadProcessMemoryVec(RMORequestRPM rpmRequest);

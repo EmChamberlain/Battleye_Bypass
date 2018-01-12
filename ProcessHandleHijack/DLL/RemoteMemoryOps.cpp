@@ -298,6 +298,54 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			}
 
 		}
+		else if (request.order == 5)
+		{
+
+			RMOResponseRPM8 response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
+		else if (request.order == 6)
+		{
+
+			RMOResponseRPM128 response;
+			//response.status = ReadProcessMemory(pHandle, (LPCVOID)request.address, &response.bytes, request.size, &response.bytesRead);
+
+			// TODO: Maybe check if the handle is an existing/valid one? Or fuck it, RPM return suffice probably
+			response.status = ReadProcessMemory((HANDLE)processHandle, (LPCVOID)request.address, &response.val, request.size, &response.bytesRead);
+			if (response.status == 0) {
+				//std::cout << "ERROR ]> ReadProcessMemory failed!" << endl;
+				//std::cout << "ERROR ]> Address: " << hex << request.address << " Size: " << dec << request.size << endl;
+			}
+
+			BOOL fSuccess = FALSE;
+			DWORD bytesWritten = 0;
+			fSuccess = WriteFile(m_pipeHandle, &response, sizeof(response), &bytesWritten, NULL);
+			if (!fSuccess) {
+				//std::cout << "ERROR ]> WriteFile failed!" << endl;
+			}
+			else {
+				//std::cout << "OK    ]> Response sent (" << dec << bytesWritten << " bytes written)" << endl;
+			}
+
+		}
 		else
 		{
 			//std::cout << "ERROR ]> Unknown order: " << request.order << endl;

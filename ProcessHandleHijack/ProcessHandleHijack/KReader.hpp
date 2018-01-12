@@ -57,6 +57,25 @@ public:
 
 		return (T)response.bytes;
 	}*/
+	int128 readType128(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPM128 response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(int128);
+			response = gatewayClient.RemoteReadProcessMemory128(request);
+		}
+
+		return response.val;
+	}
 	int64_t readType64(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
 	{
 		//T writeMe;
@@ -91,6 +110,25 @@ public:
 			request.address = w_read;
 			request.size = sizeof(int32_t);
 			response = gatewayClient.RemoteReadProcessMemory32(request);
+		}
+
+		return response.val;
+	}
+	int8_t readType8(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPM8 response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 1;
+			request.address = w_read;
+			request.size = sizeof(int8_t);
+			response = gatewayClient.RemoteReadProcessMemory8(request);
 		}
 
 		return response.val;
@@ -164,9 +202,8 @@ public:
 	
 
 	// returns a string, if this method fails, returns "FAIL"
-	std::string getGNameFromId(const int32_t& w_id)
+	std::string getGNameFromId(const int32_t& w_id, int64_t GNames)
 	{
-		int64_t GNames = readType64(m_PUBase + GNAMES, PROTO_NORMAL_READ);
 		int64_t singleNameChunk = readType64(GNames + (w_id / 0x4000) * 8, PROTO_NORMAL_READ);
 		int64_t singleNamePtr = readType64(singleNameChunk + 8 * (w_id % 0x4000), PROTO_NORMAL_READ);
 

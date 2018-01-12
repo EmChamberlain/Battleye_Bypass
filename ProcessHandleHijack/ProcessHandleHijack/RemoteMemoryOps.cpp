@@ -70,6 +70,35 @@ bool HandleGatewayClient::RequestReadProcessMemory(RMORequestRPM rpmRequest) {
 	return true;
 }
 
+RMOResponseRPM128 HandleGatewayClient::ReceiveReadProcessMemory128() {
+	RMOResponseRPM128 response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM128), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
+RMOResponseRPM128 HandleGatewayClient::RemoteReadProcessMemory128(RMORequestRPM rpmRequest) {
+	RMOResponseRPM128 response;
+	rpmRequest.order = 6;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemory128();
+	}
+
+	return response;
+}
+
 RMOResponseRPM64 HandleGatewayClient::ReceiveReadProcessMemory64() {
 	RMOResponseRPM64 response;
 	BOOL fSuccess = FALSE;
@@ -123,6 +152,35 @@ RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rp
 	rpmRequest.order = 1;
 	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
 		response = HandleGatewayClient::ReceiveReadProcessMemory32();
+	}
+
+	return response;
+}
+
+RMOResponseRPM8 HandleGatewayClient::ReceiveReadProcessMemory8() {
+	RMOResponseRPM8 response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM8), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
+RMOResponseRPM8 HandleGatewayClient::RemoteReadProcessMemory8(RMORequestRPM rpmRequest) {
+	RMOResponseRPM8 response;
+	rpmRequest.order = 5;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemory8();
 	}
 
 	return response;

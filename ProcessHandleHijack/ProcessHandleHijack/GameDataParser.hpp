@@ -1,6 +1,9 @@
 #pragma once
 
 #include "KReader.hpp"
+#include "pubgdec.hpp"
+
+
 #include <deque>
 #include <vector>
 
@@ -56,6 +59,7 @@ public:
 	* These are updated once every read loop.
 	*/
 	int64_t m_UWorld;
+	int64_t m_GNames;
 	int64_t m_gameInstance;
 	int64_t m_ULocalPlayer;
 	int64_t m_localPlayer;
@@ -86,10 +90,6 @@ private:
 	/*
 	* PRIVATE CLASS FUNCTIONS
 	*/
-	int64_t shittyDecrypt(int i)
-	{
-		
-	}
 	void readPlayers()
 	{
 		std::vector<Player> *playersTemp = new std::vector<Player>();
@@ -98,69 +98,16 @@ private:
 		for (int i = 0; i < m_playerCount; i++)
 		{
 
-			/*EncryptedActor encrActor = m_kReader->readTypeActor(m_AActorPtr + (i * sizeof(EncryptedActor)), PROTO_NORMAL_READ);
-			
-			DWORD decoded_xor = encrActor.xor ^ 0xCBAC;
-			DWORD decoded_Index = encrActor.index ^ 0xD7AF5ABC;
-
-			auto Xor1 = m_kReader->readType32(m_encryptionTable + 4*((byte)(decoded_Index)+0x300), PROTO_NORMAL_READ);
-			auto Xor2 = m_kReader->readType32(m_encryptionTable + 4*((byte)((DWORD_PTR)decoded_Index >> 0x8) + 0x200), PROTO_NORMAL_READ);
-			auto Xor3 = m_kReader->readType32(m_encryptionTable + 4*((byte)((DWORD_PTR)decoded_Index >> 0x10) + 0x100), PROTO_NORMAL_READ);
-			auto Xor4 = m_kReader->readType32(m_encryptionTable + 4*((DWORD_PTR)(decoded_Index >> 0x18)), PROTO_NORMAL_READ);
-			auto Real_Index = (Xor1^Xor2^Xor3^~Xor4) % 0x2B;
-			if (decoded_xor == 0 || decoded_Index == 0 || Xor1 == 0 || Xor2 == 0 || Xor3 == 0 || Xor4 == 0 || Real_Index == 0)
-			{
-				std::cout << decoded_xor << ":" << decoded_Index << ":" << Xor1 << ":" << Xor2 << ":" << Xor3 << ":" << Xor4 << ":" << Real_Index << std::endl;
-				char trash;
-				std::cin >> trash;
-			}
-			int64_t curActor = encrActor.ptr_table[Real_Index] ^ decoded_xor;
-			*/
-
-
-			//this is complete shit, need to find a way to do it with the encryptionTable
-			/*int64_t curActor;
-			int32_t curActorID;
-			std::string actorGName;
-
-			EncryptedActor encrActor = m_kReader->readTypeActor(m_AActorPtr + (i * sizeof(EncryptedActor)), PROTO_NORMAL_READ);
-			uint16_t decoded_xor = encrActor.xor ^ 0xCBAC;
-			
-			for (int j = 0; j < 0x2B; j++)
-			{
-				if (0xFFFFF < encrActor.ptr_table[j] < 0xFFFFFFFFFFF)
-				{
-					curActor = encrActor.ptr_table[j] ^ (int64_t)(decoded_xor);
-					curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);
-					actorGName = m_kReader->getGNameFromId(curActorID);
-					if (actorGName != "None" && actorGName != "FAIL")
-					{
-						std::cout << actorGName << std::endl;
-						for (std::vector<std::string>::iterator it = playerGNameVec.begin(); it != playerGNameVec.end(); ++it)
-						{
-							//check if the name is same, and add it to the playerIDs vector
-							if (*it == actorGName.substr(0, (*it).length()))
-							{
-								std::cout << actorGName << std::endl;
-								char trash;
-								std::cin >> trash;
-								break;
-							}
-						}
-						
-					}
-						
-				}
-			}*/
 
 			// read the position of Player
-			int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
+			//int64_t curActor = m_kReader->readType64(m_AActorPtr + (i * 0x8), PROTO_NORMAL_READ);
+			int64_t curActor = pubgdec::decptr(m_kReader, m_AActorPtr + (i * 0x180));//#define O_ENCRYPTEDENTITYSIZE 0x180
 			if (curActor == NULL)
 				continue;
 			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);// 0x0018 live server
 			if (curActorID == NULL)
 				continue;
-			std::string actorGName = m_kReader->getGNameFromId(curActorID);
+			std::string actorGName = m_kReader->getGNameFromId(curActorID, m_GNames);
 			
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
@@ -192,7 +139,7 @@ private:
 					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
 					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x538, PROTO_NORMAL_READ);
 					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
-					std::string itemName = m_kReader->getGNameFromId(UItemID);
+					std::string itemName = m_kReader->getGNameFromId(UItemID, m_GNames);
 
 					// check if inside the map / array of wanted items
 					for (std::map<std::string, std::string>::iterator it = dropGNameMap.begin(); it != dropGNameMap.end(); ++it)
@@ -317,9 +264,14 @@ private:
 
 	void readLocals()
 	{
-		m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
+		//m_UWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
+		m_UWorld = pubgdec::decptr(m_kReader, m_kReader->getPUBase() + UWORLD);
+		//m_GNames = m_kReader->readType64(m_kReader->getPUBase() + GNAMES, PROTO_NORMAL_READ);
+		m_GNames = pubgdec::decptr(m_kReader, m_kReader->getPUBase() + GNAMES);
+
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x0140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance    //0x140 test?
-		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
+		//m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
+		m_ULocalPlayer = pubgdec::decptr(m_kReader, m_gameInstance + 0x38);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);//UPlayer
 		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);//UGameViewportClient
 		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//APlayerController
@@ -336,9 +288,9 @@ private:
 		m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
-		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x928, PROTO_NORMAL_READ);//0x918 live server
-		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x92C, PROTO_NORMAL_READ);//0x91C live server
-		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x930, PROTO_NORMAL_READ);//0x920 live server
+		m_XOriginLocation = m_kReader->readType32(m_PWorld + 0x928, PROTO_NORMAL_READ);//these tend to be before class UWorldComposition*                           WorldComposition;
+		m_YOriginLocation = m_kReader->readType32(m_PWorld + 0x92C, PROTO_NORMAL_READ);//
+		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x930, PROTO_NORMAL_READ);//
 		
 		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x448, PROTO_NORMAL_READ);//APlayerCameraManager //0x438 live server
 		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo

@@ -30,6 +30,19 @@ struct EncryptedActor
 };
 
 
+typedef struct int128 {
+	LONGLONG low;
+	LONGLONG high;
+} int128;
+
+
+typedef struct RMOResponseRPM128 RMOResponseRPM128;
+struct RMOResponseRPM128 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	int128 val;
+};
 
 
 struct RMOResponseRPM64 {
@@ -48,7 +61,12 @@ struct RMOResponseRPM32 {
 	INT32 val;
 };
 
-
+struct RMOResponseRPM8 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT8 val;
+};
 
 struct RMOResponseRPMVec {
 	// RMORequestRPM request;
