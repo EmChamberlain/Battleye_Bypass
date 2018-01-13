@@ -199,6 +199,34 @@ public:
 
 		return response;
 	}
+	// caution: if you use this method, you need to delete the allocated heap from where ever you called this method from
+	RMOResponseRPMBytes* readBytes(const int64_t& w_read, const int32_t& w_readSize, const PROTO_MESSAGE& w_protoMsg)
+	{
+		RMORequestRPM request;
+		RMOResponseRPMBytes *response = new RMOResponseRPMBytes;
+		// memset(paluu, 0, readSize);
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)writeMe, (uint64_t)w_read, w_readSize - 2, (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+
+			request.order = 1;
+			request.address = w_read;
+			request.size = w_readSize;
+			*response = gatewayClient.RemoteReadProcessMemoryBytes(request);
+
+		}
+
+		if (response->status == 0)
+		{
+			return NULL;
+		}
+
+		return response;
+	}
+
 	
 
 	// returns a string, if this method fails, returns "FAIL"

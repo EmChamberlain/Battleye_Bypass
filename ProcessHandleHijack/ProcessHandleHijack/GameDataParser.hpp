@@ -17,6 +17,8 @@ public:
 	GameDataParser()
 	{
 		m_kReader = new KReader;
+		readPUBase();
+		pubgdec::decinit(m_kReader);
 	}
 	~GameDataParser()
 	{
@@ -270,7 +272,7 @@ private:
 		m_GNames = pubgdec::decptr(m_kReader, m_kReader->getPUBase() + GNAMES);
 
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x0140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance    //0x140 test?
-		//m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
+		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
 		m_ULocalPlayer = pubgdec::decptr(m_kReader, m_gameInstance + 0x38);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);//UPlayer
 		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);//UGameViewportClient
