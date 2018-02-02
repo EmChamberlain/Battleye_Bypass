@@ -267,7 +267,7 @@ private:
 
 	void readLocals()
 	{
-		m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x3d87f10, PROTO_NORMAL_READ);
+		m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x3D88F10, PROTO_NORMAL_READ);
 		m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
 		//m_UWorld = pubgdec::decptr(m_kReader, m_kReader->getPUBase() + UWORLD);
 		m_GNames = m_kReader->readType64(m_kReader->getPUBase() + GNAMES, PROTO_NORMAL_READ);
