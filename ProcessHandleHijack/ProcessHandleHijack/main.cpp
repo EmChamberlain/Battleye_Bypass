@@ -278,8 +278,8 @@ void aimLoop()
 
 			}
 
-			//found a target and middle mouse or B is pressed
-			if (foundTarget && ((GetKeyState(VK_MBUTTON) & 0x80) != 0 || (GetKeyState(0x42) & 0x80) != 0))
+			//found a target and middle mouse or N is pressed
+			if (foundTarget && ((GetKeyState(VK_MBUTTON) & 0x80) != 0 || (GetKeyState(0x4E) & 0x80) != 0))
 			{
 				
 				Vector3 angDelta = clamp(toRotationVec(bestDelta) - localAng - recoil);
