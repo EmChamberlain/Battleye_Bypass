@@ -44,6 +44,11 @@ public:
 		return m_kReader->readPUBase();
 	}
 
+	void writeAng(Vector3 in)
+	{
+		m_kReader->writeVec(m_playerController + 0x03E0, in);
+	}
+
 
 	/*
 	* These vectors house the up to date aactors.
@@ -82,10 +87,17 @@ public:
 	int32_t m_ZOriginLocation;
 	int64_t m_playerController;
 	int64_t m_playerCameraManager;
+	//Vector3 m_playerCameraLocation;
 	Vector3 m_playerCameraRotation;
 	Vector3 m_localPlayerPositionCamera;
 	int64_t m_encryptionTable;
+	int64_t m_localPlayerCharacterMovement;
+	int8_t m_localPlayerStance;
+	Vector3 m_localPlayerRotation;
 
+
+	bool needToWriteAng = false;
+	Vector3 toWriteAng = Vector3(89.0, 89.0, 0.0);
 
 
 private:
@@ -122,9 +134,13 @@ private:
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
+				actorLocation.Z += m_ZOriginLocation;
+
+				int64_t movement = m_kReader->readType64(curActor + 0x418, PROTO_NORMAL_READ);
+				StanceMode stance = StanceMode(m_kReader->readType8(movement + 0x4B8, PROTO_NORMAL_READ));
 
 				//w_data["players"].emplace_back(json::object({ { "t", actorTeam },{ "x", actorLocation.X },{ "y", actorLocation.Y }/*,{ "z", actorLocation.Z } }));
-				playersTemp->push_back(Player(actorTeam, actorLocation));
+				playersTemp->push_back(Player(actorTeam, actorLocation, stance));
 			}
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
@@ -267,6 +283,15 @@ private:
 
 	void readLocals()
 	{
+		if (needToWriteAng)
+		{
+			writeAng(toWriteAng);
+			needToWriteAng = false;
+			toWriteAng = Vector3(89.0, 89.0, 0.0);
+		}
+
+		
+
 		m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + 0x3D88F10, PROTO_NORMAL_READ);
 		m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
 		//m_UWorld = pubgdec::decptr(m_kReader, m_kReader->getPUBase() + UWORLD);
@@ -297,9 +322,20 @@ private:
 		m_ZOriginLocation = m_kReader->readType32(m_PWorld + 0x930, PROTO_NORMAL_READ);//
 		
 		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x448, PROTO_NORMAL_READ);//APlayerCameraManager //0x438 live server
-		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo
+		//m_playerCameraLocation = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo, 0x0 Location
+		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x43C, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo, 0xC Rotation
+
 		
 		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);
+
+
+		//m_localPlayerCharacterMovement = m_kReader->readType64(m_localPawn + 0x418, PROTO_NORMAL_READ);
+		//m_localPlayerStance = m_kReader->readType8(m_localPlayerCharacterMovement + 0x4B8, PROTO_NORMAL_READ);
+
+		m_localPlayerRotation = m_kReader->readTypeVec(m_playerController + 0x03E0, PROTO_NORMAL_READ);//FRotator
+
+		//StanceMode at 0x4B8 1 byte
+
 
 		/*m_weaponProcessor = m_kReader->readType64(m_localPawn + 0xA48, PROTO_NORMAL_READ);
 		m_currentWeaponIndex = m_kReader->readType32(m_weaponProcessor + 0x4C8, PROTO_NORMAL_READ);
@@ -312,7 +348,7 @@ private:
 
 	}
 
-
+	
 
 	/*
 	* CLASS VARIABLES

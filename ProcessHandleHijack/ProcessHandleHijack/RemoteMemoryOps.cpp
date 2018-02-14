@@ -273,6 +273,14 @@ RMOResponseRPMActor HandleGatewayClient::RemoteReadProcessMemoryActor(RMORequest
 }
 
 
+
+void HandleGatewayClient::RemoteWriteProcessMemoryVec(RMORequestRPM rpmRequest) {
+	RMOResponseRPMVec response;
+	rpmRequest.order = 7;
+	HandleGatewayClient::RequestReadProcessMemory(rpmRequest);
+}
+
+
 BOOL HandleGatewayClient::DisconnectPipe() {
 	return CloseHandle(m_pipeHandle);
 }

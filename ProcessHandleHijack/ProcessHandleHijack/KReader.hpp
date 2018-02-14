@@ -227,6 +227,15 @@ public:
 		return response;
 	}
 
+	void writeVec(const int64_t& w_write, Vector3 in)
+	{
+		RMORequestRPM request;
+		request.order = 7;
+		request.address = w_write;
+		request.toWrite = in;
+		gatewayClient.RemoteWriteProcessMemoryVec(request);
+	}
+
 	
 
 	// returns a string, if this method fails, returns "FAIL"

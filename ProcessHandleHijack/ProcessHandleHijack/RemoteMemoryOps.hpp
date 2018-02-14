@@ -82,15 +82,6 @@ struct RMOResponseRPMVec {
 	Vector3 val;
 };
 
-
-typedef struct RMORequestRPM RMORequestRPM;
-struct RMORequestRPM {
-	int order = 0;
-	LONGLONG address = 0;
-	int size = BUFSIZE;
-	bool base = false;
-};
-
 typedef struct RMOResponseRPMBytes RMOResponseRPMBytes;
 struct RMOResponseRPMBytes {
 	// RMORequestRPM request;
@@ -105,6 +96,16 @@ struct RMOResponseRPMActor {
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	EncryptedActor encrActor;
+};
+
+
+typedef struct RMORequestRPM RMORequestRPM;
+struct RMORequestRPM {
+	int order = 0;
+	LONGLONG address = 0;
+	int size = BUFSIZE;
+	bool base = false;
+	Vector3 toWrite;
 };
 
 /*typedef struct RMOResponseRPM RMOResponseRPM;
@@ -158,6 +159,8 @@ public:
 
 	RMOResponseRPMActor HandleGatewayClient::ReceiveReadProcessMemoryActor();
 	RMOResponseRPMActor HandleGatewayClient::RemoteReadProcessMemoryActor(RMORequestRPM rpmRequest);
+
+	void RemoteWriteProcessMemoryVec(RMORequestRPM rpmRequest);
 
 protected:
 	HANDLE m_pipeHandle = INVALID_HANDLE_VALUE;

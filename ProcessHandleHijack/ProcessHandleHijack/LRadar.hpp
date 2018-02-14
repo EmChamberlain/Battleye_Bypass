@@ -109,10 +109,9 @@ public:
 		int dirScale = max(s_width, s_height);
 		DrawLine(x, y, x + (dir.X * dirScale), y + (dir.Y * dirScale), D3DCOLOR_ARGB(255, 255, 0, 255));// direction aiming
 	}
+
+
 	bool miramarBool = true;
-
-
-
 
 
 private:

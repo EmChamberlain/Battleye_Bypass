@@ -95,6 +95,7 @@ struct RMORequestRPM {
 	LONGLONG address = 0;
 	int size = BUFSIZE;
 	bool base = false;
+	Vector3 toWrite;
 };
 
 

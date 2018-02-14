@@ -2,6 +2,8 @@
 #include <iostream>
 #include <thread>
 
+#include <math.h>
+
 
 
 #include "GameDataParser.hpp"
@@ -15,6 +17,14 @@ using namespace std;
 GameDataParser* GDParser;
 LRadar* Radar;
 
+bool aimBool = false;//this is set to true in main after gdparser is initialized
+bool smoothBool = true;
+float smooth = 1.25f;
+
+
+
+
+//First started writing to angles on 2/14/2018
 
 /*void test() {
 	HandleGatewayClient gatewayClient;
@@ -111,7 +121,7 @@ LRadar* Radar;
 	std::system("pause");
 }*/
 
-void readerLoop(GameDataParser* w_reader, LRadar* radar)
+/*void readerLoop(GameDataParser* w_reader, LRadar* radar)
 {
 	while (true)
 	{
@@ -125,7 +135,7 @@ void readerLoop(GameDataParser* w_reader, LRadar* radar)
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 	}
-}
+}*/
 void inputLoop(LRadar* radar)
 {
 	while(true)
@@ -136,10 +146,154 @@ void inputLoop(LRadar* radar)
 			radar->miramarBool = true;
 		else if (letter == 'E')
 			radar->miramarBool = false;
+		else if (letter == 'A')
+		{
+			aimBool = !aimBool;
+			std::cout << aimBool << std::endl;
+		}
+		else if (letter == 'S')
+		{
+			float f;
+			std::cin >> f;
+			smooth = f;
+		}
+			
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 	
 }
+
+Vector3 clamp(Vector3 in)
+{
+	Vector3 result = in;
+	//pitch = X
+	//yaw = Y
+	//roll = Z
+	if (result.X > 180)
+		result.X -= 360;
+
+	else if (result.X < -180)
+		result.X += 360;
+
+	if (result.Y > 180)
+		result.Y -= 360;
+
+	else if (result.Y < -180)
+		result.Y += 360;
+
+	if (result.X < -89)
+		result.X = -89;
+
+	if (result.X > 89)
+		result.X = 89;
+
+	while (result.Y < -180.0f)
+		result.Y += 360.0f;
+
+	while (result.Y > 180.0f)
+		result.Y -= 360.0f;
+
+	result.Z = 0;
+
+	return result;
+	
+}
+
+Vector3 toRotationVec(Vector3 in)
+{
+	Vector3 rot;
+	float RADPI = (float)(180 / M_PI);
+	rot.Y = (float)atan2(in.Y, in.X) * RADPI;
+	rot.X = (float)atan2(in.Z, sqrt((in.X * in.X) + (in.Y * in.Y))) * RADPI;
+	rot.Z = 0;
+
+	return rot;
+}
+
+void aimLoop()
+{
+	while(true)
+	{
+		while(aimBool)
+		{
+			
+			
+			std::vector<Player> *players;
+
+			if (GDParser->writingVectors)
+				players = GDParser->playersOld;
+			else
+				players = GDParser->players;
+
+
+			Vector3 localEyeLoc = GDParser->m_localPlayerPositionCamera;
+			Vector3 localAng = GDParser->m_localPlayerRotation;
+			
+			//std::cout << localAng << std::endl;
+				
+			float fov = 5.0f;
+			
+
+			Vector3 bestDelta;
+			bool foundTarget = false;
+
+			for (Player p : *players)
+			{
+				Vector3 chest = p.loc;
+
+				switch(p.stance)
+				{
+				case stand:
+					chest.Z += 30;
+					break;
+				case crouch:
+					chest.Z += 10;
+					break;
+				case prone:
+					chest.Z -= 15;
+					break;
+				}
+
+
+				Vector3 delta = chest - localEyeLoc;
+				Vector3 angDelta = clamp(toRotationVec(delta) - localAng);
+				//
+				if (angDelta.length() <= fov)
+				{
+					fov = angDelta.length();
+					bestDelta = delta;
+					foundTarget = true;
+				}
+
+			}
+
+			//found a target and middle mouse is pressed
+			if (foundTarget && (GetKeyState(VK_MBUTTON) & 0x80) != 0)
+			{
+				
+				Vector3 angDelta = clamp(toRotationVec(bestDelta) - localAng);
+				if (smoothBool)
+				{
+					if (fov < 1.0)
+						fov = 1.0;
+					float smthAmount = fov * smooth;
+					angDelta.X = angDelta.X / smthAmount;
+					angDelta.Y = angDelta.Y / smthAmount;
+					angDelta.Z = angDelta.Z / smthAmount;
+				}
+				Vector3 toAim = localAng + (angDelta);
+				GDParser->toWriteAng = clamp(toAim);
+				GDParser->needToWriteAng = true;
+			}
+			
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+}
+
+
 // render function
 void render()
 {
@@ -242,7 +396,9 @@ int main()
 	}*/
 
 	//std::thread t1(readerLoop, GDParser, Radar);
-	std::thread t1(inputLoop, Radar);
+	std::thread inputThread(inputLoop, Radar);
+	std::thread aimThread(aimLoop);
+
 	
 	MSG msg;
 
@@ -265,6 +421,7 @@ int main()
 		//render shit here
 		GDParser->readLoop();
 		render();
+		aimBool = true;
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 	
