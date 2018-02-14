@@ -217,7 +217,7 @@ void aimLoop()
 		while(aimBool)
 		{
 			
-			
+			//std::cout << GDParser->m_currentWeaponRecoilInfoVert << std::endl;
 			std::vector<Player> *players;
 
 			if (GDParser->writingVectors)
@@ -227,12 +227,19 @@ void aimLoop()
 
 
 			Vector3 localEyeLoc = GDParser->m_localPlayerPositionCamera;
+			localEyeLoc.X += GDParser->m_XOriginLocation;
+			localEyeLoc.Y += GDParser->m_YOriginLocation;
+			localEyeLoc.Z += GDParser->m_ZOriginLocation;
+
 			Vector3 localAng = GDParser->m_localPlayerRotation;
+			
+
 			
 			//std::cout << localAng << std::endl;
 				
 			float fov = 5.0f;
-			
+			Vector3 recoil = Vector3(GDParser->m_currentWeaponRecoilInfoVert.X, 0.0, 0.0);
+
 
 			Vector3 bestDelta;
 			bool foundTarget = false;
@@ -244,19 +251,19 @@ void aimLoop()
 				switch(p.stance)
 				{
 				case stand:
-					chest.Z += 30;
+					chest.Z += 30;//30
 					break;
 				case crouch:
-					chest.Z += 10;
+					chest.Z += 10;//10
 					break;
 				case prone:
-					chest.Z -= 15;
+					chest.Z -= 15;//15
 					break;
 				}
 
 
 				Vector3 delta = chest - localEyeLoc;
-				Vector3 angDelta = clamp(toRotationVec(delta) - localAng);
+				Vector3 angDelta = clamp(toRotationVec(delta) - localAng - recoil);
 				//
 				if (angDelta.length() <= fov)
 				{
@@ -267,11 +274,11 @@ void aimLoop()
 
 			}
 
-			//found a target and middle mouse is pressed
-			if (foundTarget && (GetKeyState(VK_MBUTTON) & 0x80) != 0)
+			//found a target and middle mouse or B is pressed
+			if (foundTarget && ((GetKeyState(VK_MBUTTON) & 0x80) != 0 || (GetKeyState(0x42) & 0x80) != 0))
 			{
 				
-				Vector3 angDelta = clamp(toRotationVec(bestDelta) - localAng);
+				Vector3 angDelta = clamp(toRotationVec(bestDelta) - localAng - recoil);
 				if (smoothBool)
 				{
 					if (fov < 1.0)
@@ -281,6 +288,7 @@ void aimLoop()
 					angDelta.Y = angDelta.Y / smthAmount;
 					angDelta.Z = angDelta.Z / smthAmount;
 				}
+
 				Vector3 toAim = localAng + (angDelta);
 				GDParser->toWriteAng = clamp(toAim);
 				GDParser->needToWriteAng = true;
@@ -401,7 +409,7 @@ int main()
 
 	
 	MSG msg;
-
+	bool madeAimBool = false;
 	while (TRUE)
 	{
 		ZeroMemory(&msg, sizeof(MSG));
@@ -421,7 +429,12 @@ int main()
 		//render shit here
 		GDParser->readLoop();
 		render();
-		aimBool = true;
+		if (!madeAimBool)
+		{
+			aimBool = true;
+			madeAimBool = true;
+		}
+			
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 	

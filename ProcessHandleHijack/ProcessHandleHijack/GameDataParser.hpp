@@ -96,6 +96,13 @@ public:
 	Vector3 m_localPlayerRotation;
 
 
+	int64_t m_weaponProcessor ;
+	int32_t m_currentWeaponIndex;
+	int64_t m_equippedWeapons;
+	int64_t m_currentWeapon;
+	Vector3 m_currentWeaponRecoilInfoVert;
+
+
 	bool needToWriteAng = false;
 	Vector3 toWriteAng = Vector3(89.0, 89.0, 0.0);
 
@@ -337,10 +344,13 @@ private:
 		//StanceMode at 0x4B8 1 byte
 
 
-		/*m_weaponProcessor = m_kReader->readType64(m_localPawn + 0xA48, PROTO_NORMAL_READ);
+		//Weapon processor can be found in ATslCharacter in pubg_tslgame_classes.hpp
+		m_weaponProcessor = m_kReader->readType64(m_localPawn + 0xA48, PROTO_NORMAL_READ);
 		m_currentWeaponIndex = m_kReader->readType32(m_weaponProcessor + 0x4C8, PROTO_NORMAL_READ);
 		m_equippedWeapons = m_kReader->readType64(m_weaponProcessor + 0x4B8, PROTO_NORMAL_READ);
-		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_m_currentWeaponIndex * 8), PROTO_NORMAL_READ);*/
+		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_currentWeaponIndex * 8), PROTO_NORMAL_READ);//ATslWeapon
+		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x48, PROTO_NORMAL_READ);//FRecoilInfo
+		//FProjectileWeaponData
 
 
 
