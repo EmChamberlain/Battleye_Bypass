@@ -246,6 +246,10 @@ void aimLoop()
 
 			for (Player p : *players)
 			{
+				if(p.team == GDParser->m_localTeam)
+				{
+					continue;
+				}
 				Vector3 chest = p.loc;
 
 				switch(p.stance)
