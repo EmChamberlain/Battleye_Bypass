@@ -1,7 +1,6 @@
 #include "RemoteMemoryOps.hpp"
 
 
-bool readLoop = true;
 
 // ugly to define the wanted items / player gnames this way.
 std::vector<std::string> playerGNameVec = { "PlayerMale", "PlayerFemale" };

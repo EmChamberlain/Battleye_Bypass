@@ -20,6 +20,7 @@ LRadar* Radar;
 bool aimBool = false;//this is set to true in main after gdparser is initialized
 bool smoothBool = true;
 float smooth = 1.25f;
+float startingFOV = 2.5f;
 
 
 
@@ -121,21 +122,13 @@ float smooth = 1.25f;
 	std::system("pause");
 }*/
 
-/*void readerLoop(GameDataParser* w_reader, LRadar* radar)
+void readLoop()
 {
 	while (true)
 	{
-		if (readLoop)
-		{
-			w_reader->readLoop();
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		}
-		else
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		}
+		GDParser->readLoop();
 	}
-}*/
+}
 void inputLoop(LRadar* radar)
 {
 	while(true)
@@ -155,7 +148,20 @@ void inputLoop(LRadar* radar)
 		{
 			float f;
 			std::cin >> f;
-			smooth = f;
+			if (f == 0.0)
+				smoothBool = false;
+			else
+			{
+				smoothBool = true;
+				smooth = f;
+			}
+				
+		}
+		else if (letter == 'F')
+		{
+			float f;
+			std::cin >> f;				
+			startingFOV = f;
 		}
 			
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -237,8 +243,14 @@ void aimLoop()
 			
 			//std::cout << localAng << std::endl;
 				
-			float fov = 5.0f;
-			Vector3 recoil = Vector3(GDParser->m_currentWeaponRecoilInfoVert.X, 0.0, 0.0);
+			float fov = startingFOV;
+			float maxRec = GDParser->m_currentWeaponRecoilInfoVert.X;
+			if (maxRec > 2.0)
+			{
+				std::cout << "Clipping Rec: " << maxRec << std::endl;
+				maxRec = 0;
+			}
+			Vector3 recoil = Vector3(maxRec, 0.0, 0.0);
 
 
 			Vector3 bestDelta;
@@ -328,6 +340,12 @@ void render()
 	d3ddev->Present(NULL, NULL, NULL, NULL);   // displays the created frame on the screen
 }
 
+void renderLoop()
+{
+	while (true)
+		render();
+}
+
 //set up overlay window
 void SetupWindow()
 {
@@ -407,7 +425,7 @@ int main()
 		readLine = "";
 	}*/
 
-	//std::thread t1(readerLoop, GDParser, Radar);
+	//std::thread readThread(readLoop);
 	std::thread inputThread(inputLoop, Radar);
 	std::thread aimThread(aimLoop);
 

@@ -188,6 +188,7 @@ public:
 			request.order = 1;
 			request.address = w_read;
 			request.size = w_readSize - 2;
+			//request.size = w_readSize;
 			*response = gatewayClient.RemoteReadProcessMemoryBytes(request);
 
 		}
@@ -245,7 +246,7 @@ public:
 		int64_t singleNamePtr = readType64(singleNameChunk + 8 * (w_id % 0x4000), PROTO_NORMAL_READ);
 
 		char* name;
-		RMOResponseRPMBytes *response = readSize(singleNamePtr + 16, 64, PROTO_NORMAL_READ);
+		RMOResponseRPMBytes *response = readSize(singleNamePtr + 24, 64, PROTO_NORMAL_READ);//singleNamePtr went from 0x10 to 0x18 separation
 		name = (char*)(response->val);
 		if (response != NULL)
 		{
