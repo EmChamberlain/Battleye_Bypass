@@ -18,6 +18,7 @@ public:
 	{
 		m_kReader = new KReader;
 		readPUBase();
+		oneTimeLocals();
 		//pubgdec::decinit(m_kReader);
 	}
 	~GameDataParser()
@@ -288,18 +289,10 @@ private:
 		writingVectors = false;
 
 	}
-
-	void readLocals()
+	void oneTimeLocals()
 	{
-		if (needToWriteAng)
-		{
-			writeAng(toWriteAng);
-			needToWriteAng = false;
-			toWriteAng = Vector3(89.0, 89.0, 0.0);
-		}
-
-		
-
+		if (getPUBase() == 0)
+			readPUBase();
 		m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
 		m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
 
@@ -311,7 +304,7 @@ private:
 
 		m_gameInstance = m_kReader->readType64(m_UWorld + 0x0140, PROTO_NORMAL_READ);//UGameInstance    OwningGameInstance    //0x140 test?
 		m_ULocalPlayer = m_kReader->readType64(m_gameInstance + 0x38, PROTO_NORMAL_READ);//TArray<class ULocalPlayer*>
-		//m_ULocalPlayer = pubgdec::decptr(m_kReader, m_gameInstance + 0x38);
+																						 //m_ULocalPlayer = pubgdec::decptr(m_kReader, m_gameInstance + 0x38);
 		m_localPlayer = m_kReader->readType64(m_ULocalPlayer, PROTO_NORMAL_READ);//UPlayer
 		m_viewportclient = m_kReader->readType64(m_localPlayer + 0x58, PROTO_NORMAL_READ);//UGameViewportClient
 		m_playerController = m_kReader->readType64(m_localPlayer + 0x30, PROTO_NORMAL_READ);//APlayerController
@@ -319,6 +312,24 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel
+
+		
+
+	}
+	void readLocals()
+	{
+		if (needToWriteAng)
+		{
+			writeAng(toWriteAng);
+			needToWriteAng = false;
+			toWriteAng = Vector3(89.0, 89.0, 0.0);
+		}
+
+		
+		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3DAA540);
+		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
+		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
+		
 
 		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x70, PROTO_NORMAL_READ);
 		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
@@ -329,9 +340,7 @@ private:
 		//std::string myGName = m_kReader->getGNameFromId(myID, m_GNames);
 
 
-		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3DAA540);
-		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
-		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
+		
 		//m_AActorPtr = m_kReader->readType64(m_ULevel + 0xA0, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		//m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
@@ -356,12 +365,24 @@ private:
 
 		
 
-		//Weapon processor can be found in ATslCharacter in pubg_tslgame_classes.hpp
+		//AWeapon processor can be found in ATslCharacter in pubg_tslgame_classes.hpp
 		m_weaponProcessor = m_kReader->readType64(m_localPawn + 0xA48, PROTO_NORMAL_READ);
 		m_currentWeaponIndex = m_kReader->readType32(m_weaponProcessor + 0x4C8, PROTO_NORMAL_READ);
 		m_equippedWeapons = m_kReader->readType64(m_weaponProcessor + 0x4B8, PROTO_NORMAL_READ);
 		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_currentWeaponIndex * 8), PROTO_NORMAL_READ);//ATslWeapon
-		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x48, PROTO_NORMAL_READ);//FRecoilInfo
+		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ);//FRecoilInfo
+
+		static int tempcounter = 0;
+		if(tempcounter++ == 200)
+		{
+			std::cout << "*****" << std::endl;
+			std::cout << m_currentWeaponRecoilInfoVert << std::endl;
+			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x34, PROTO_NORMAL_READ) << std::endl;
+			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ) << std::endl;
+			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x4C, PROTO_NORMAL_READ) << std::endl;
+			tempcounter = 0;
+		}
+			
 		//FProjectileWeaponData
 
 

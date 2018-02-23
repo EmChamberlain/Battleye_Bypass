@@ -20,7 +20,7 @@ LRadar* Radar;
 bool aimBool = false;//this is set to true in main after gdparser is initialized
 bool smoothBool = true;
 float smooth = 1.25f;
-float startingFOV = 2.5f;
+float startingFOV = 3.25f;
 
 
 
@@ -281,7 +281,7 @@ void aimLoop()
 				Vector3 delta = chest - localEyeLoc;
 				Vector3 angDelta = clamp(toRotationVec(delta) - localAng - recoil);
 				//
-				if (angDelta.length() <= fov)
+				if (angDelta.length() <= fov )
 				{
 					fov = angDelta.length();
 					bestDelta = delta;
@@ -457,7 +457,7 @@ int main()
 			madeAimBool = true;
 		}
 			
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
 	
 	return msg.wParam;
