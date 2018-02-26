@@ -293,12 +293,35 @@ private:
 	{
 		if (getPUBase() == 0)
 			readPUBase();
-		m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
-		m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
 
-		m_GNames = m_kReader->readType64(m_kReader->getPUBase() + GNAMES, PROTO_NORMAL_READ);
-		m_GNames = m_kReader->readType64(m_GNames + 0xF8, PROTO_NORMAL_READ);
-		m_GNames = m_GNames + +0x530;
+
+#define UWORLD_CRYPTED_BASE 0x3B2A120
+#define UWORLD_CRYPTED_OFFSET 0x407C470
+
+		m_UWorld = DecryptData(m_kReader->getPUBase() + UWORLD_CRYPTED_OFFSET, m_kReader->getPUBase() + UWORLD_CRYPTED_BASE);
+
+#define GNAMES0_CRYPTED_BASE 0x3D90370  
+#define GNAMES0_CRYPTED_OFFSET 0x3F5E8C0 
+
+		uint64_t GNAMES1_CRYPTED_OFFSET = DecryptData(m_kReader->getPUBase() + GNAMES0_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES0_CRYPTED_BASE);
+#define GNAMES1_CRYPTED_BASE 0x3D90170
+
+		uint64_t GNAMES2_CRYPTED_OFFSET = DecryptData(GNAMES1_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES1_CRYPTED_BASE);
+#define GNAMES2_CRYPTED_BASE 0x3B2A5F0
+
+		m_GNames = DecryptData(GNAMES2_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES2_CRYPTED_BASE);
+
+
+
+		//m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
+		//m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
+
+
+		//m_GNames = m_kReader->readType64(m_kReader->getPUBase() + 0x3F5E8D8, PROTO_NORMAL_READ) + 0x30;
+		//m_GNames = DecryptData(m_GNames, m_kReader->getPUBase() + 0x3B2A5F0);
+		//m_GNames = m_kReader->readType64(m_kReader->getPUBase() + GNAMES, PROTO_NORMAL_READ);
+		//m_GNames = m_kReader->readType64(m_GNames + 0xF8, PROTO_NORMAL_READ);
+		//m_GNames = m_GNames + +0x530;
 		//std::cout << "UWorld: " << std::hex << m_UWorld << std::endl;
 		//std::cout << "GNames: " << std::hex << m_GNames << std::endl;
 
@@ -312,7 +335,7 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel
-
+		
 		
 
 	}
@@ -326,7 +349,7 @@ private:
 		}
 
 		
-		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3DAA540);
+		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3DAA540);// + 0xA0
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 		
@@ -370,16 +393,16 @@ private:
 		m_currentWeaponIndex = m_kReader->readType32(m_weaponProcessor + 0x4C8, PROTO_NORMAL_READ);
 		m_equippedWeapons = m_kReader->readType64(m_weaponProcessor + 0x4B8, PROTO_NORMAL_READ);
 		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_currentWeaponIndex * 8), PROTO_NORMAL_READ);//ATslWeapon
-		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ);//FRecoilInfo
+		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ);//FRecoilInfo //0x40 prev
 
 		static int tempcounter = 0;
 		if(tempcounter++ == 200)
 		{
 			std::cout << "*****" << std::endl;
 			std::cout << m_currentWeaponRecoilInfoVert << std::endl;
-			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x34, PROTO_NORMAL_READ) << std::endl;
-			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ) << std::endl;
-			//std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x4C, PROTO_NORMAL_READ) << std::endl;
+			std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x34, PROTO_NORMAL_READ) << std::endl;
+			std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ) << std::endl;
+			std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x4C, PROTO_NORMAL_READ) << std::endl;
 			tempcounter = 0;
 		}
 			
