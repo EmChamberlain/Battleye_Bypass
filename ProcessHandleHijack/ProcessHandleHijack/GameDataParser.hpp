@@ -295,21 +295,14 @@ private:
 			readPUBase();
 
 
-#define UWORLD_CRYPTED_BASE 0x3B2A120
-#define UWORLD_CRYPTED_OFFSET 0x407C470
 
-		m_UWorld = DecryptData(m_kReader->getPUBase() + UWORLD_CRYPTED_OFFSET, m_kReader->getPUBase() + UWORLD_CRYPTED_BASE);
+		int64_t base = m_kReader->getPUBase();
 
-#define GNAMES0_CRYPTED_BASE 0x3D90370  
-#define GNAMES0_CRYPTED_OFFSET 0x3F5E8C0 
+		m_UWorld = DecryptData(base + 0x407C8C0, base + 0x3B2A120);
 
-		uint64_t GNAMES1_CRYPTED_OFFSET = DecryptData(m_kReader->getPUBase() + GNAMES0_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES0_CRYPTED_BASE);
-#define GNAMES1_CRYPTED_BASE 0x3D90170
+ 
 
-		uint64_t GNAMES2_CRYPTED_OFFSET = DecryptData(GNAMES1_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES1_CRYPTED_BASE);
-#define GNAMES2_CRYPTED_BASE 0x3B2A5F0
-
-		m_GNames = DecryptData(GNAMES2_CRYPTED_OFFSET, m_kReader->getPUBase() + GNAMES2_CRYPTED_BASE);
+		m_GNames = DecryptData(DecryptData(DecryptData((base + 0x3F5ED10), base + 0x3D90770), base + 0x3D90770), base + 0x3D90770);
 
 
 
@@ -349,7 +342,7 @@ private:
 		}
 
 		
-		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3DAA540);// + 0xA0
+		int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3D90770);// + 0xA0
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 		
