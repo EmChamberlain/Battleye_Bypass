@@ -156,6 +156,35 @@ RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rp
 	return response;
 }
 
+RMOResponseRPM16 HandleGatewayClient::RemoteReadProcessMemory16(RMORequestRPM rpmRequest) {
+	RMOResponseRPM16 response;
+	rpmRequest.order = 8;
+	if (HandleGatewayClient::RequestReadProcessMemory(rpmRequest)) {
+		response = HandleGatewayClient::ReceiveReadProcessMemory16();
+	}
+
+	return response;
+}
+
+RMOResponseRPM16 HandleGatewayClient::ReceiveReadProcessMemory16() {
+	RMOResponseRPM16 response;
+	BOOL fSuccess = FALSE;
+	DWORD bytesRead = 0;
+
+	do { // Read from the pipe.
+		fSuccess = ReadFile(m_pipeHandle, &response, sizeof(RMOResponseRPM16), &bytesRead, NULL);
+
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+			break;
+
+	} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
+
+	if (!fSuccess)
+		cout << "RFile failed, Error: " << dec << GetLastError() << endl;
+
+	return response;
+}
+
 RMOResponseRPM8 HandleGatewayClient::ReceiveReadProcessMemory8() {
 	RMOResponseRPM8 response;
 	BOOL fSuccess = FALSE;

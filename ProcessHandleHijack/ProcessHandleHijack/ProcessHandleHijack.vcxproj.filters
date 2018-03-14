@@ -27,9 +27,6 @@
     <ClCompile Include="uint128_t.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pubgdec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameDataParser.hpp">
@@ -54,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="def.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pubgdec.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#define BUFSIZE 100 // * sizeof(char)
+#define BUFSIZE 0x125 // * sizeof(char)
 #define MAXPIPEFILESIZE 1024 // 1Kb max file size
 // At init() I could calculate the sizeof() all the requests and responses struct and use the largest as maxpipefilesize
 
@@ -59,6 +59,13 @@ struct RMOResponseRPM32 {
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	INT32 val;
+};
+
+struct RMOResponseRPM16 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT16 val;
 };
 
 struct RMOResponseRPM8 {

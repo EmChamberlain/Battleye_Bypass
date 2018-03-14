@@ -114,6 +114,25 @@ public:
 
 		return response.val;
 	}
+	int16_t readType16(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
+	{
+		//T writeMe;
+		RMORequestRPM request;
+		RMOResponseRPM16 response;
+
+		if (w_protoMsg == PROTO_NORMAL_READ)
+		{
+			//readStruct rStruct{ (uint64_t)&writeMe, (uint64_t)w_read, sizeof(T), (uint32_t)GetCurrentProcessId(), 0, TRUE, 0 };
+			// send the struct to IOCTL
+			//WriteFile(m_hDriver, (LPCVOID)&rStruct, sizeof(ReadStruct), NULL, NULL);
+			request.order = 8;
+			request.address = w_read;
+			request.size = sizeof(int16_t);
+			response = gatewayClient.RemoteReadProcessMemory16(request);
+		}
+
+		return response.val;
+	}
 	int8_t readType8(const int64_t& w_read, const PROTO_MESSAGE& w_protoMsg)
 	{
 		//T writeMe;

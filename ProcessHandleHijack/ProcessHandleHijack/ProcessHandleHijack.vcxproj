@@ -182,7 +182,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pubgdec.cpp" />
     <ClCompile Include="RemoteMemoryOps.cpp" />
     <ClCompile Include="uint128_t.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -192,7 +191,6 @@
     <ClInclude Include="GameDataParser.hpp" />
     <ClInclude Include="KReader.hpp" />
     <ClInclude Include="LRadar.hpp" />
-    <ClInclude Include="pubgdec.hpp" />
     <ClInclude Include="RemoteMemoryOps.hpp" />
     <ClInclude Include="Types.hpp" />
     <ClInclude Include="uint128_t.h" />

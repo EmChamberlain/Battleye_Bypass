@@ -266,6 +266,9 @@ void aimLoop()
 
 				switch(p.stance)
 				{
+				case none:
+					chest.Z += 30;//30
+					break;
 				case stand:
 					chest.Z += 30;//30
 					break;

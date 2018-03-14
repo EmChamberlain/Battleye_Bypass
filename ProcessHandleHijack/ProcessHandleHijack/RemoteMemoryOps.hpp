@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "Types.hpp"
-#include "def.h"
+//#include "def.h"
 
 
 // ugly to define the wanted items / player gnames this way.
@@ -23,7 +23,7 @@ extern std::map<std::string, std::string> dropGNameMap;
 
 #define PIPEWAITTIMOUTIFBUSY 20000
 
-#define BUFSIZE 100 // * sizeof(char)
+#define BUFSIZE 0x125 // * sizeof(char)
 #define MAXPIPEFILESIZE 1024 // 1Kb max file size
 // At init() I could calculate the sizeof() all the requests and responses struct and use the largest as maxpipefilesize
 
@@ -32,8 +32,8 @@ extern std::map<std::string, std::string> dropGNameMap;
 #define RMO_ORDER_WRITEPROCESSMEMORY 2
 
 typedef struct int128 {
-	int64 low;
-	int64 high;
+	uint64_t low;
+	uint64_t high;
 } int128;
 
 
@@ -61,6 +61,14 @@ struct RMOResponseRPM32 {
 	BOOL status = FALSE;
 	SIZE_T bytesRead = 0;
 	INT32 val;
+};
+
+typedef struct RMOResponseRPM16 RMOResponseRPM16;
+struct RMOResponseRPM16 {
+	// RMORequestRPM request;
+	BOOL status = FALSE;
+	SIZE_T bytesRead = 0;
+	INT16 val;
 };
 
 typedef struct RMOResponseRPM8 RMOResponseRPM8;
@@ -146,6 +154,9 @@ public:
 
 	RMOResponseRPM32 HandleGatewayClient::ReceiveReadProcessMemory32();
 	RMOResponseRPM32 HandleGatewayClient::RemoteReadProcessMemory32(RMORequestRPM rpmRequest);
+
+	RMOResponseRPM16 HandleGatewayClient::ReceiveReadProcessMemory16();
+	RMOResponseRPM16 HandleGatewayClient::RemoteReadProcessMemory16(RMORequestRPM rpmRequest);
 
 	RMOResponseRPM8 HandleGatewayClient::ReceiveReadProcessMemory8();
 	RMOResponseRPM8 HandleGatewayClient::RemoteReadProcessMemory8(RMORequestRPM rpmRequest);
