@@ -6,8 +6,7 @@
 
 #include <deque>
 #include <vector>
-
-
+#include "def.h"
 
 
 class GameDataParser
@@ -298,13 +297,17 @@ private:
 
 		int64_t base = m_kReader->getPUBase();
 
+		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x3EBA580, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
 		//m_UWorld = DecryptData(base + 0x407D8C0, base + 0x5108F10);//0x407C8C0 //base 0x3B2A120		
-		m_UWorld = DecryptUWorld(base + 0x418d560, base + 0x3C32120);
- 
+		//m_UWorld = DecryptUWorld(base + 0x418F520, base + 0x3C34120);//0x3C34120
+		
+		
+
+		m_GNames = m_kReader->readType64(base + 0x3F29888, PROTO_NORMAL_READ);
 
 		//m_GNames = DecryptData(DecryptData(DecryptData((base + 0x3F5FD10), base + 0x5108F10), base + 0x5108F10), base + 0x5108F10);//0x3F5ED10 //base 0x3B2A120
-		m_GNames = DecryptGName(base + 0x406D6B0, base + 0x3C32120);
-		m_GNames = DecryptGName2(m_GNames, base + 0x3C32120);
+		//m_GNames = DecryptGName(base + 0xABBD70, base + 0x3C34120);//0x406F6A0
+		//m_GNames = DecryptGName2(m_GNames, base + 0x3C34120);
 
 		//m_BaseUWorld = m_kReader->readType64(m_kReader->getPUBase() + UWORLD, PROTO_NORMAL_READ);
 		//m_UWorld = m_kReader->readType64(m_BaseUWorld, PROTO_NORMAL_READ);
@@ -343,7 +346,8 @@ private:
 
 		
 		//int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3D90770);// + 0xA0
-		uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3C32120);
+		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3C34120);
+		uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0);
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
@@ -392,7 +396,7 @@ private:
 		m_currentWeapon = m_kReader->readType64(m_equippedWeapons + (m_currentWeaponIndex * 8), PROTO_NORMAL_READ);//ATslWeapon
 		m_currentWeaponRecoilInfoVert = m_kReader->readTypeVec(m_currentWeapon + 0xC58 + 0x40, PROTO_NORMAL_READ);//FRecoilInfo in ATslWeapon_Trajectory //0xB90 + 0x40 prev
 
-		static int tempcounter = 0;
+		/*static int tempcounter = 0;
 		if(tempcounter++ == 200)
 		{
 			std::cout << "*****" << std::endl;
@@ -401,7 +405,7 @@ private:
 			std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x40, PROTO_NORMAL_READ) << std::endl;
 			std::cout << m_kReader->readTypeVec(m_currentWeapon + 0xB90 + 0x4C, PROTO_NORMAL_READ) << std::endl;
 			tempcounter = 0;
-		}
+		}*/
 			
 		//FProjectileWeaponData
 
@@ -485,7 +489,7 @@ private:
 		return qDecrypt3(_esi);
 	}*/
 
-	typedef DWORD_PTR(__stdcall *_qDeCrypt)(DWORD_PTR esi);
+	/*typedef DWORD_PTR(__stdcall *_qDeCrypt)(DWORD_PTR esi);
 	PVOID codeMem;
 	template<typename T> T rol(T val, size_t count)
 	{
@@ -597,12 +601,104 @@ private:
 		ret = ror(ret, 0x69);
 		ZeroMemory(qDecrypt3, 0x300);
 		return ret;
-	}
+	}*/
 
-#define P_GWORLDE  0x418B560
-#define P_GNAMES   0x406B6B0 
-#define P_GOBJECTS 0x40740F0
-#define P_EDECPTR  0x3C30120
+typedef __int64(__fastcall *DecryptF)(DWORD_PTR);
+ULONGLONG globalCryptTable = 0x3C35120;
+size_t calcFuncLengthEx(uint64_t funcAddress, BYTE end = 0xC3)
+{
+	size_t lenght = 0;
+	while (uint8_t(m_kReader->readType8(funcAddress++, PROTO_NORMAL_READ)) != end)
+		lenght++;
+	return lenght;
+}
+template<class T> T __ROL__(T value, int count)
+{
+	const uint nbits = sizeof(T) * 8;
+
+	if (count > 0)
+	{
+		count %= nbits;
+		T high = value >> (nbits - count);
+		if (T(-1) < 0) // signed value
+			high &= ~((T(-1) << count));
+		value <<= count;
+		value |= high;
+	}
+	else
+	{
+		count = -count % nbits;
+		T low = value << (nbits - count);
+		value >>= count;
+		value |= low;
+	}
+	return value;
+}
+
+inline uint8_t  __ROR1__(uint8_t  value, int count) { return __ROL__((uint8_t)value, -count); }
+inline uint16_t __ROL2__(uint16_t value, int count) { return __ROL__((uint16_t)value, count); }
+inline uint16_t __ROR2__(uint16_t value, int count) { return __ROL__((uint16_t)value, -count); }
+inline uint64_t __ROR8__(uint64_t value, int count) { return __ROL__((uint64_t)value, -count); }
+
+#define _BYTE  uint8_t
+#define BYTEn(x, n)   (*((_BYTE*)&(x)+n))
+#define _WORD  uint16_t
+#define WORDn(x, n)   (*((_WORD*)&(x)+n))
+#define WORD1(x)   WORDn(x,  1)
+#define BYTE1(x)   BYTEn(x,  1)  
+#define BYTE2(x)   BYTEn(x,  2)
+
+
+PVOID codeMemAct = NULL;
+
+
+DWORD_PTR DecryptActors(DWORD_PTR cryptedOffset)
+{
+	if (codeMemAct == NULL)
+		codeMemAct = VirtualAlloc(0, 1024, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+	uint32_t v1 = m_kReader->readType32(cryptedOffset, PROTO_NORMAL_READ);
+	DWORD_PTR v2 = m_kReader->readType64(cryptedOffset + 8, PROTO_NORMAL_READ);
+
+	DWORD_PTR v4 = globalCryptTable + m_kReader->getPUBase();
+
+	auto v5 = (unsigned __int16)__ROR2__(v1 - 78, -78) ^ ((unsigned __int16)(WORD1(v1) + 42) + 42706);
+
+	DWORD_PTR targetFunc = m_kReader->readType64(v4 + (8 * (((unsigned __int8)__ROR1__((__ROR2__(v1 - 78, -78) ^ (BYTE2(v1) - 4)) + 66, 66) ^ ((unsigned __int8)__ROR1__(BYTE1(v5) + 98, -98) + 220)) % 128)), PROTO_NORMAL_READ);
+
+	ULONG delta = m_kReader->readType32(targetFunc + 10, PROTO_NORMAL_READ);
+
+	RMOResponseRPMBytes *response = m_kReader->readBytes(targetFunc, 9, PROTO_NORMAL_READ);
+	memcpy((PVOID)((PCHAR)codeMemAct), (PVOID)(response->val), 9);
+	delete response;
+
+	/*if (!mem->ReadStr(targetFunc, PVOID((__int64)codeMemAct), 9))
+		return 0;*/
+
+	auto funcL = calcFuncLengthEx((uint64_t)(targetFunc + 14 + delta));
+
+	response = m_kReader->readBytes(targetFunc + 14 + delta, funcL, PROTO_NORMAL_READ);
+	memcpy(PVOID((int64_t)(codeMemAct) + 9), (PVOID)(response->val), funcL);
+	delete response;
+
+	/*if (!mem->ReadStr(targetFunc + 14 + delta, PVOID((__int64)codeMemAct + 9), funcL))
+		return 0;*/
+
+	response = m_kReader->readBytes(targetFunc + 9 + 5, 0x45, PROTO_NORMAL_READ);
+	memcpy(PVOID((int64_t)(codeMemAct) + 9 + funcL), (PVOID)(response->val), 0x45);
+	delete response;
+
+	/*if (!mem->ReadStr(targetFunc + 9 + 5, PVOID((__int64)codeMemAct + 9 + funcL), 0x45))
+		return 0;*/
+
+	DecryptF Decrypt = (DecryptF)((__int64)codeMemAct);
+	auto res = __ROR8__(Decrypt(v2 ^ v1), -118);
+
+	ZeroMemory(codeMemAct, 1024);
+
+	return res;
+}
+
 
 
 
