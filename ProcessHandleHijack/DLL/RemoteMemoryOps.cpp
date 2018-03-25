@@ -346,11 +346,11 @@ BOOL HandleGatewayServer::RemoteReadProcessMemory(RMORequestRPM request) {
 			}
 
 		}
-		else if (request.order == 7)
+		/*else if (request.order == 7)
 		{
 			SIZE_T trash;
 			WriteProcessMemory((HANDLE)processHandle, (LPVOID)request.address, &request.toWrite, sizeof(request.toWrite), &trash);
-		}
+		}*/
 		else if (request.order == 8)
 		{
 
