@@ -181,12 +181,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dec.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RemoteMemoryOps.cpp" />
     <ClCompile Include="uint128_t.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dec.h" />
     <ClInclude Include="def.h" />
     <ClInclude Include="GameDataParser.hpp" />
     <ClInclude Include="KReader.hpp" />
