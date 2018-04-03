@@ -59,6 +59,9 @@ public:
 		case savage:
 			mapSprite->Draw(mapTextureSavage, NULL, NULL, &pos, 0xFFFFFFFF);
 			break;
+		default:
+			mapSprite->Draw(mapTextureGrey, NULL, NULL, &pos, 0xFFFFFFFF);
+			break;
 
 		}			
 		mapSprite->End();
