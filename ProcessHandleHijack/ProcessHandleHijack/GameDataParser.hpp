@@ -347,9 +347,9 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel*/
-		m_UWorld = tsl_decrypt_world(&tsl, base + 0x41af780);
+		m_UWorld = tsl_decrypt_world(&tsl, base + 0x42ddef0);//live 0x41af780
 
-		m_GNames = READ64(base + 0x3f488f8);
+		m_GNames = READ64(base + 0x407bd10);//live 0x3f488f8
 
 		m_gameInstance = READ64(m_UWorld + 0x148);
 		m_localPlayer = tsl_decrypt_prop(&tsl, READ64(m_gameInstance + 0x38));
@@ -653,7 +653,8 @@ static uint64_t ror8(uint64_t x, unsigned int count) {
 
 
 // credit: https://www.unknowncheats.me/forum/members/2235736.html
-
+//LIVE
+/*
 uint32_t get_func_len(struct tsl *tsl, uint64_t func, uint8_t start, uint32_t end) {
 	uint8_t buf[0x80];
 	RMOResponseRPMBytes *response = m_kReader->readBytes(func, sizeof(buf), PROTO_NORMAL_READ);
@@ -774,8 +775,133 @@ uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
 	uint64_t ret = tsl->func(ror8(xmm.high, key & 7) - key);
 	memset(tsl->func, 0, 0x400);
 	return ror8(ret, 107);
+}*/
+
+//BETA
+uint32_t get_func_len(struct tsl *tsl, uint64_t func, uint8_t start, uint32_t end) {
+	uint8_t buf[0x80];
+	RMOResponseRPMBytes *response = m_kReader->readBytes(func, sizeof(buf), PROTO_NORMAL_READ);
+	memcpy(buf, response->val, sizeof(buf));
+	delete response;
+
+	if (buf[0] == start) {
+		uint32_t len = 0;
+		for (; len < (sizeof(buf) - sizeof(end)); len++) {
+			if (*(uint32_t *)(buf + len) == end) {
+				return len;
+			}
+		}
+	}
+	return 0;
+}
+int make_decrypt_func(struct tsl *tsl, uint64_t func) {
+	uint64_t x = (func + 14) + READ32(func + 10);
+	uint32_t len = get_func_len(tsl, x, 0x48, 0xccccccc3);
+	if (!len || len > 0xf) {
+		return 0;
+	}
+	RMOResponseRPMBytes *response = m_kReader->readBytes(func, 9, PROTO_NORMAL_READ);
+	memcpy(tsl->func, response->val, 9);
+	delete response;
+
+	response = m_kReader->readBytes(x, len, PROTO_NORMAL_READ);
+	memcpy((char *)tsl->func + 9, response->val, len);
+	delete response;
+
+	response = m_kReader->readBytes(func + 14, 0x50, PROTO_NORMAL_READ);
+	memcpy((char *)tsl->func + 9 + len, response->val, 0x50);
+	delete response;
+
+	return 1;
 }
 
+// exports
+
+#define TABLE 0x3d80120
+
+struct uint128_t {
+	uint64_t low;
+	uint64_t high;
+};
+
+uint64_t tsl_decrypt_world(struct tsl *tsl, uint64_t world) {
+	struct uint128_t xmm;
+
+	RMOResponseRPMBytes *response = m_kReader->readBytes(world, 16, PROTO_NORMAL_READ);
+	memcpy(&xmm, response->val, 16);
+	delete response;
+
+
+	uint32_t key = (uint32_t)xmm.low;
+	uint16_t x;
+	uint16_t y;
+	x = ~(~(uint16_t)key + 31);
+	y = x ^ ((uint16_t)(WORD1(key) - 125) + 11249);
+	uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * ((((uint8_t)~((~BYTE1(y) - 7) ^ 7) + 222) ^ (uint8_t)~(~(x ^ (BYTE2(key) + 116)) - 105)) % 128));
+	if (!make_decrypt_func(tsl, func)) {
+		return 0;
+	}
+	uint64_t ret = tsl->func(xmm.high + key);
+	memset(tsl->func, 0, 0x400);
+	return ror8(ret, 45);
+}
+
+uint64_t tsl_decrypt_actor(struct tsl *tsl, uint64_t actor) {
+	struct uint128_t xmm;
+
+	RMOResponseRPMBytes *response = m_kReader->readBytes(actor, 16, PROTO_NORMAL_READ);
+	memcpy(&xmm, response->val, 16);
+	delete response;
+
+	uint32_t key = (uint32_t)xmm.low;
+	uint16_t x;
+	uint16_t y;
+	uint8_t z;
+	uint16_t w;
+	uint8_t q;
+	if (key & 2) {
+		x = ~((uint16_t)key + 100) + ~((uint16_t)key - 100);
+	}
+	else {
+		x = ~((uint16_t)key ^ 0xFFFFFF9C) + (uint16_t)key - 99;
+	}
+	y = (uint16_t)x ^ (ror2(WORD1(key), -84) + 46172);
+	z = (uint8_t)(x ^ (ror2(WORD1(key), -84) + 92));
+	if (z & 2) {
+		w = ~(z - 124);
+		q = z + 124;
+	}
+	else {
+		IDA_LOBYTE(w) = z + 125;
+		q = z ^ 0x7C;
+	}
+	uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(~q + w) ^ (rol1(BYTE1(y), -60) + 72)) % 128));
+	if (!make_decrypt_func(tsl, func)) {
+		return 0;
+	}
+	uint64_t ret = tsl->func(rol8(xmm.high ^ key, key & 7) - key);
+	memset(tsl->func, 0, 0x400);
+	return ror8(ret, -20);
+}
+
+uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
+	struct uint128_t xmm;
+
+	RMOResponseRPMBytes *response = m_kReader->readBytes(prop, 16, PROTO_NORMAL_READ);
+	memcpy(&xmm, response->val, 16);
+	delete response;
+
+
+	uint32_t key = (uint32_t)xmm.low;
+	uint16_t x = (uint16_t)(key - 85) ^ (rol2(WORD1(key), -95) + 10149);
+	uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(((key - 85) ^ (rol2(WORD1(key), -95) - 91)) - 125) ^ (rol1(BYTE1(x) - 77, -77) + 118)) % 128));
+	if (!make_decrypt_func(tsl, func)) {
+		return 0;
+	}
+	uint64_t ret = tsl->func(~(~xmm.high ^ key));
+	memset(tsl->func, 0, 0x400);
+	return ror8(ret, 17);
+}
 
 
 

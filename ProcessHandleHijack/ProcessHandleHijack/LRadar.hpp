@@ -48,10 +48,19 @@ public:
 		mapSprite->SetTransform(&resultMatrix);
 
 		mapSprite->Begin(NULL);
-		if(miramarBool)
-			mapSprite->Draw(mapTextureMiramar, NULL, NULL, &pos, 0xFFFFFFFF);
-		else
+		switch(map)
+		{
+		case erangel:
 			mapSprite->Draw(mapTextureErangel, NULL, NULL, &pos, 0xFFFFFFFF);
+			break;
+		case miramar:
+			mapSprite->Draw(mapTextureMiramar, NULL, NULL, &pos, 0xFFFFFFFF);
+			break;
+		case savage:
+			mapSprite->Draw(mapTextureSavage, NULL, NULL, &pos, 0xFFFFFFFF);
+			break;
+
+		}			
 		mapSprite->End();
 
 		float x = (s_width) / 2;
@@ -111,7 +120,7 @@ public:
 	}
 
 
-	bool miramarBool = true;
+	Map map = savage;
 
 
 private:

@@ -136,26 +136,15 @@ void inputLoop(LRadar* radar)
 		char letter;
 		cin >> letter;
 		if (letter == 'M')
-			radar->miramarBool = true;
+			radar->map = miramar;
 		else if (letter == 'E')
-			radar->miramarBool = false;
+			radar->map = erangel;
+		else if (letter == 'S')
+			radar->map = savage;
 		else if (letter == 'A')
 		{
 			aimBool = !aimBool;
 			std::cout << aimBool << std::endl;
-		}
-		else if (letter == 'S')
-		{
-			float f;
-			std::cin >> f;
-			if (f == 0.0)
-				smoothBool = false;
-			else
-			{
-				smoothBool = true;
-				smooth = f;
-			}
-				
 		}
 		else if (letter == 'F')
 		{

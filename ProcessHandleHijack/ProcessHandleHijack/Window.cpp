@@ -14,8 +14,10 @@ LPD3DXFONT pFont;
 ID3DXLine* d3dLine;
 LPDIRECT3DTEXTURE9 mapTextureMiramar;
 LPDIRECT3DTEXTURE9 mapTextureErangel;
+LPDIRECT3DTEXTURE9 mapTextureSavage;
 D3DSURFACE_DESC surfaceMiramar;
 D3DSURFACE_DESC surfaceErangel;
+D3DSURFACE_DESC surfaceSavage;
 LPD3DXSPRITE mapSprite;
 RECT windowRect;
 
@@ -52,6 +54,10 @@ void initD3D(HWND hWnd)
 
 	D3DXCreateTextureFromFile(d3ddev, "D:/pic_er.jpg", &mapTextureErangel);//png for erangel
 	mapTextureErangel->GetLevelDesc(NULL, &surfaceErangel);
+	D3DXCreateSprite(d3ddev, &mapSprite);
+
+	D3DXCreateTextureFromFile(d3ddev, "D:/pic_sa.jpg", &mapTextureSavage);//png for savage
+	mapTextureSavage->GetLevelDesc(NULL, &surfaceSavage);
 	D3DXCreateSprite(d3ddev, &mapSprite);
 
 	D3DXCreateFont(d3ddev, 20, 0, FW_NORMAL, 0, FALSE,

@@ -28,6 +28,13 @@ enum StanceMode
 	max = 4
 };
 
+enum Map
+{
+	erangel = 0,
+	miramar = 1,
+	savage = 2
+};
+
 struct Vector3
 {
 	float X;
