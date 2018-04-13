@@ -419,7 +419,7 @@ int main()
 
 	//std::thread readThread(readLoop);
 	std::thread inputThread(inputLoop, Radar);
-	std::thread aimThread(aimLoop);
+	//std::thread aimThread(aimLoop);
 
 	
 	MSG msg;

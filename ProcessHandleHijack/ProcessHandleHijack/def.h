@@ -56,7 +56,7 @@ typedef ull             uint64;
 #define _BYTE  uint8
 #define _WORD  uint16
 #define _DWORD uint32
-#define _QWORD uint64
+#define _uint64_t uint64
 #if !defined(_MSC_VER)
 #define _LONGLONG __int128
 #endif
@@ -75,7 +75,6 @@ typedef int32 DWORD;
 typedef int32 LONG;
 typedef int BOOL;       // uppercase BOOL is usually 4 bytes
 #endif
-typedef int64 QWORD;
 #ifndef __cplusplus
 typedef int bool;       // we want to use bool in our C programs
 #endif
