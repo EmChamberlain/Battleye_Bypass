@@ -50,7 +50,7 @@ void initD3D(HWND hWnd)
 	D3DXCreateFontA(d3ddev, 13, 0, FW_HEAVY, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont);
 	D3DXCreateLine(d3ddev, &d3dLine);
 
-	D3DXCreateTextureFromFile(d3ddev, "D:/pic_mir.png", &mapTextureMiramar);//png for miramar
+	D3DXCreateTextureFromFile(d3ddev, "D:/pic_mir.jpg", &mapTextureMiramar);//png for miramar
 	mapTextureMiramar->GetLevelDesc(NULL, &surfaceMiramar);
 
 
