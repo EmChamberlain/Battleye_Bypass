@@ -168,8 +168,8 @@ private:
 			{
 				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
-				int64_t playerState = DecryptPointer(curActor + 0x3E0);//0x3C0 live server
-				int32_t actorTeam = m_kReader->readType32(playerState + 0x04CC, PROTO_NORMAL_READ);//0x049C old
+				int64_t playerState = tsl_decrypt_prop(&tsl, curActor + 0x3E0);//0x3C0 live server
+				int32_t actorTeam = READ64(playerState + 0x04CC);//0x049C old
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -324,9 +324,9 @@ private:
 		if (getPUBase() == 0)
 			readPUBase();
 
-		/*if (!tsl_init(&tsl)) {
+		if (!tsl_init(&tsl)) {
 			// what?
-		}*/
+		}
 
 		int64_t base = m_kReader->getPUBase();
 
@@ -364,20 +364,23 @@ private:
 		m_localPlayerState = m_kReader->readType64(m_localPawn + 0x3D0, PROTO_NORMAL_READ);//APlayerState //0x3C0 live server //0x3D0 test?
 		m_PWorld = m_kReader->readType64(m_viewportclient + 0x80, PROTO_NORMAL_READ);//UWorld
 		m_ULevel = m_kReader->readType64(m_PWorld + 0x30, PROTO_NORMAL_READ);//ULevel*/
-		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x40F9B20, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
 
-		m_GNames = m_kReader->readType64(base + 0x416A888, PROTO_NORMAL_READ);
+
+
+		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x40ebb20, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
+
+		m_GNames = m_kReader->readType64(base + 0x415c878, PROTO_NORMAL_READ);
 
 		m_gameInstance = READ64(m_UWorld + 0x148);
 		m_ULocalPlayer = READ64(m_gameInstance + 0x38);
-		m_localPlayer = DecryptPointer(m_ULocalPlayer);
+		m_localPlayer = tsl_decrypt_prop(&tsl, m_ULocalPlayer);
 		//m_viewportclient = READ64(m_localPlayer + 0x60);
 
-		m_playerController = DecryptPointer(m_localPlayer + 0x30);
-		m_localPawn = DecryptPointer(m_playerController + 0x470);
-		m_localPlayerState = DecryptPointer(m_localPawn + 0x3E0);
+		m_playerController = tsl_decrypt_prop(&tsl, m_localPlayer + 0x30);
+		m_localPawn = tsl_decrypt_prop(&tsl, m_playerController + 0x470);
+		m_localPlayerState = tsl_decrypt_prop(&tsl, m_localPawn + 0x3E0);
 
-		m_ULevel = DecryptPointer(m_UWorld + 0x30);
+		m_ULevel = tsl_decrypt_prop(&tsl, m_UWorld + 0x30);
 
 
 
@@ -399,7 +402,7 @@ private:
 		//int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3D90770);// + 0xA0
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3C34120);
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0);
-		uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0);
+		uint64_t decryptedAActorPtr = tsl_decrypt_actor(&tsl, m_ULevel + 0xA0);
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
@@ -491,13 +494,9 @@ private:
 	std::vector<int32_t> playerIDs;
 	std::vector<int32_t> vehicleIDs;
 
-
-/*	int tsl_init(struct tsl *tsl) {
-		tsl->func = (decrypt_func)VirtualAlloc(NULL, 0x600, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-		if (tsl->func == NULL) {
-			return 0;
-		}
-		return 1;
+	int tsl_init(struct tsl *tsl) {
+		tsl->func = (decrypt_func)VirtualAlloc(NULL, 0x200, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+		return tsl->func == NULL ? 0 : 1;
 	}
 
 	void tsl_finit(struct tsl *tsl) {
@@ -561,7 +560,124 @@ private:
 
 // credit: https://www.unknowncheats.me/forum/members/2235736.html
 //LIVE
+	struct rel_addr {
+		uint32_t offset;
+		uint32_t addr;
+	};
 
+	int find_call(const uint8_t *buf, uint32_t size, struct rel_addr *ret) {
+		uint32_t offset = 0;
+		while (offset < (size - 5)) {
+			if (buf[offset] == 0xe8) {
+				uint32_t addr = *(uint32_t *)(buf + (offset + 1));
+				if (addr < 0x8000) {
+					ret->offset = offset + 5;
+					ret->addr = addr;
+					return 1;
+				}
+			}
+			offset++;
+		}
+		return 0;
+	}
+
+	uint32_t get_func_len(const uint8_t *buf, uint32_t size, uint8_t start, uint32_t end) {
+		if (*buf == start) {
+			uint32_t offset = 0;
+			while (offset < (size - sizeof(end))) {
+				if (*(uint32_t *)(buf + offset) == end) {
+					return offset;
+				}
+				offset++;
+			}
+		}
+		return 0;
+	}
+
+	uint64_t decrypt(struct tsl *tsl, uint64_t func, uint64_t arg) {
+		uint8_t buf_0x100[0x100];
+
+		RMOResponseRPMBytes *response = m_kReader->readBytes(func, 0x100, PROTO_NORMAL_READ);
+		memcpy(buf_0x100, response->val, 0x100);
+		delete response;
+
+		
+		struct rel_addr rel_addr;
+		if (!find_call(buf_0x100, 0x100, &rel_addr)) {
+			return 0;
+		}
+		uint64_t abs_addr = func + (rel_addr.offset + rel_addr.addr);
+		uint8_t buf_0x20[0x20];
+
+		response = m_kReader->readBytes(abs_addr, 0x20, PROTO_NORMAL_READ);
+		memcpy(buf_0x20, response->val, 0x20);
+		delete response;
+
+		
+		uint32_t len = get_func_len(buf_0x20, 0x20, 0x48, 0xccccccc3);
+		if (!len || len > 0xf) {
+			return 0;
+		}
+		uint32_t temp = rel_addr.offset - 5;
+		memcpy(tsl->func, buf_0x100, temp);
+		memcpy((char *)tsl->func + temp, buf_0x20, len);
+		memcpy((char *)tsl->func + (temp + len), buf_0x100 + rel_addr.offset, 0x100 - rel_addr.offset);
+		uint64_t ret = tsl->func(arg);
+		memset(tsl->func, 0, 0x200);
+		return ret;
+	}
+
+	// exports
+
+#define TABLE 0x3e61120
+
+	struct uint128_t {
+		uint64_t low;
+		uint64_t high;
+	};
+
+	uint64_t tsl_decrypt_world(struct tsl *tsl, uint64_t world) {
+		return 0;
+	}
+
+	uint64_t tsl_decrypt_gnames(struct tsl *tsl, uint64_t gnames) {
+		return 0;
+	}
+
+	uint64_t tsl_decrypt_actor(struct tsl *tsl, uint64_t actor) {
+		struct uint128_t xmm;
+
+		RMOResponseRPMBytes *response = m_kReader->readBytes(actor, 16, PROTO_NORMAL_READ);
+		memcpy(&xmm, response->val, 16);
+		delete response;
+
+		
+		uint32_t key = (uint32_t)xmm.low;
+		uint16_t x = (uint16_t)(IDA_LOWORD(key) - 52) ^ ((key >> 16) + 15476);
+		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(((IDA_LOWORD(key) - 52) ^ (IDA_HIWORD(key) + 116)) + 44) ^ (BYTE1(x) + 24)) % 128));
+		return ror8(decrypt(tsl, func, ~(key + ~xmm.high)), -92);
+	}
+
+	uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
+		struct uint128_t xmm;
+
+		RMOResponseRPMBytes *response = m_kReader->readBytes(prop, 16, PROTO_NORMAL_READ);
+		memcpy(&xmm, response->val, 16);
+		delete response;
+
+		
+		uint32_t key = (uint32_t)xmm.low;
+		uint64_t x;
+		if (IDA_LOWORD(key) & 2) {
+			x = xmm.high - key;
+		}
+		else {
+			x = xmm.high + key;
+		}
+		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(ror2(IDA_LOWORD(key), 8) ^ (rol2(IDA_HIWORD(key), 8) - 67)) ^ ((uint8_t)(((uint16_t)(ror2(IDA_LOWORD(key), 8) ^ (rol2(IDA_HIWORD(key), 8) - 20547)) >> 8) - 37) + 70)) % 128));
+		return ror8(decrypt(tsl, func, x), -55);
+	}
+	/*
 	uint32_t get_func_len(struct tsl *tsl, uint64_t func, uint8_t start, uint32_t end) {
 		uint8_t buf[0x80];
 		RMOResponseRPMBytes *response = m_kReader->readBytes(func, sizeof(buf), PROTO_NORMAL_READ);
@@ -698,152 +814,10 @@ private:
 		uint64_t ret = tsl->func(~t);
 		memset(tsl->func, 0, 0x400);
 		return ror8(ret, -45);
-	}
+	}*/
 
-*/
 
-ULONGLONG globalCryptTable = 0x3E6F120;
-size_t calcFuncLengthEx(uint64_t funcAddress, WORD end = 0xCCC3)
-{
-	size_t lenght = 0;
-	while (uint16_t(m_kReader->readType16(funcAddress++, PROTO_NORMAL_READ)) != end)
-		lenght++;
-	return lenght;
-}
-size_t calcFuncJmpEx(uint64_t funcAddress, size_t max = 0x100)
-{
-	size_t length = 0;
-	for (; length != max; ++length)
-		//uint8_t read = m_kReader->readType8(funcAddress + length, PROTO_NORMAL_READ);
-		if (uint8_t(m_kReader->readType8(funcAddress + length, PROTO_NORMAL_READ)) == uint8_t(0xE8))
-			if (auto delta = READ32(funcAddress + length + 1))
-				if (auto DecFunc = (uint64_t)(funcAddress + length + delta + 5))
-					if (uint16_t(m_kReader->readType16(DecFunc, PROTO_NORMAL_READ)) == uint16_t(0xB848))
-						break;
 
- 	return length == 0x100 ? 0 : length;
-}
-template<class T> T __ROL__(T value, int count)
-{
-	const uint nbits = sizeof(T) * 8;
-
-	if (count > 0)
-	{
-		count %= nbits;
-		T high = value >> (nbits - count);
-		if (T(-1) < 0) // signed value
-			high &= ~((T(-1) << count));
-		value <<= count;
-		value |= high;
-	}
-	else
-	{
-		count = -count % nbits;
-		T low = value << (nbits - count);
-		value >>= count;
-		value |= low;
-	}
-	return value;
-}
-
-inline uint8  __ROR1__(uint8  value, int count) { return __ROL__((uint8)value, -count); }
-inline uint16 __ROL2__(uint16 value, int count) { return __ROL__((uint16)value, count); }
-inline uint16 __ROR2__(uint16 value, int count) { return __ROL__((uint16)value, -count); }
-inline uint64 __ROR8__(uint64 value, int count) { return __ROL__((uint64)value, -count); }
-
-#define BYTEn(x, n)   (*((_BYTE*)&(x)+n))
-#define WORDn(x, n)   (*((_WORD*)&(x)+n))
-#define WORD1(x)   WORDn(x,  1)
-#define BYTE1(x)   BYTEn(x,  1)   
-
-std::map<std::string, uint64> memPool;
-uint64 GetMemPool(std::string poolname, ulong size = 1024)
-{
-	uint64 memA = 0;
-	for (auto it = memPool.begin(); it != memPool.end(); it++)
-		if (it->first == poolname)
-			return it->second;
-	memA = (uint64)VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	memPool.insert(std::pair<std::string, uint64>(poolname, memA));
-	return memA;
-}
-
-uint64_t Decrypt(uint64_t decOf, uint64_t decTab, uint64_t toDec, std::string poolname)
-{
-	if (!decOf || !decTab || !toDec || poolname.empty())
-		return 0;
-
-	uint64 memA = 0;
-	if (!(memA = GetMemPool(poolname)))
-		return 0;
-
-	auto sz = calcFuncJmpEx(decOf);
-	if (!sz)
-		return 0;
-
-	int delta = READ32(decOf + sz + 1);
-
-	auto DecFunc = (uint64_t)(decOf + sz + delta + 5);
-	auto DecFuncL = calcFuncLengthEx(DecFunc);
-
-	RMOResponseRPMBytes *response = m_kReader->readBytes(decOf, sz, PROTO_NORMAL_READ);
-	memcpy(PVOID(memA), response->val, sz);
-	delete response;
-
-	response = m_kReader->readBytes(DecFunc, DecFuncL, PROTO_NORMAL_READ);
-	memcpy(PVOID(memA + sz), response->val, DecFuncL);
-	delete response;
-
-	response = m_kReader->readBytes(decOf + sz + 5, 0x50, PROTO_NORMAL_READ);
-	memcpy(PVOID(memA + sz + DecFuncL), response->val, 0x50);
-	delete response;
-
-	auto result = ((__int64(__fastcall*)(__int64))memA)(toDec);
-	ZeroMemory(PVOID(memA), 1024);
-	return result;
-}
-
-uint64_t DecryptActors(uint64_t cryptedOffset)
-{
-	uint32 v1 = READ32(cryptedOffset);
-	uint64_t v2 = READ64(cryptedOffset + 8);
-
-	uint64_t vTab = globalCryptTable + m_kReader->getPUBase();
-
-	auto v15 = (unsigned __int16)(v1 - 100) ^ ((unsigned __int16)(HIWORD(v1) - 84) + 19620);
-
-	uint64_t targetFunc = READ64(vTab + (8 * (((unsigned __int8)(((v1 - 100) ^ (BYTE2(v1) + 80)) + 124) ^ ((unsigned __int8)(BYTE1(v15) - 60) + 184)) % 128)));
-	if (auto encValue = Decrypt(targetFunc, vTab, ~(v1 + ~v2), ("actDec")))
-		return __ROR8__(encValue, 20);
-	return 0;
-}
-
-uint64_t DecryptPointer(uint64_t cryptedOffset)
-{
-	uint32 v1 = READ32(cryptedOffset);
-	uint64_t v2 = READ64(cryptedOffset + 8);
-
-	uint64_t vTab = globalCryptTable + m_kReader->getPUBase();
-
-	__int64 v7 = 0;
-	auto v4 = (unsigned __int16)__ROR2__(v1, 8) ^ ((unsigned __int16)__ROR2__(WORD1(v1) - 0x49, 8) + 49133);
-	auto v5 = (unsigned __int8)((unsigned __int16)(__ROR2__(v1, 8) ^ (__ROR2__(WORD1(v1) - 0x49, 8) - 16403)) >> 8);
-	if (((unsigned __int16)(__ROR2__(v1, 8) ^ (__ROR2__(WORD1(v1) - 0x49, 8) - 16403)) >> 8) & 4)
-		v5 = ~(~v5 - 0x81);
-	else
-		IDA_LOBYTE(v5) = v5 + 0x56;
-	auto v6 = (unsigned __int8)v4 ^ ((unsigned __int8)v5 + 0xE6);
-	if (v1 & 2)
-		v7 = v2 - (unsigned int)v1;
-	else
-		v7 = v2 + (unsigned int)v1;
-
-	uint64_t targetFunc = READ64(vTab + (8 * (v6 % 128)));
-
-	if (auto encValue = Decrypt(targetFunc, vTab, v7, ("ptrDec")))
-		return __ROR8__(encValue, 57);
-	return 0;
-}
 
 
 };
