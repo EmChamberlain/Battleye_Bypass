@@ -166,10 +166,11 @@ private:
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0120);//USceneComponent //0x180 live server
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
-				int64_t playerState = tsl_decrypt_prop(&tsl, curActor + 0x3E0);//0x3C0 live server
-				int32_t actorTeam = READ64(playerState + 0x04CC);//0x049C old
+				int64_t playerState = tsl_decrypt_prop(&tsl, curActor + 0x420);//0x3C0 live server
+				int32_t actorTeam = READ64(playerState + 0x0700);//0x04CC old
 
 				actorLocation.X += m_XOriginLocation;
 				actorLocation.Y += m_YOriginLocation;
@@ -184,10 +185,11 @@ private:
 			else if (actorGName == "DroppedItemGroup" || actorGName == "DroppedItemInteractionComponent")
 			{
 
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x198, PROTO_NORMAL_READ);
+				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x198, PROTO_NORMAL_READ);
+				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0120);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);
-				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x2F8, PROTO_NORMAL_READ);//unsigned char    UnknownData14[0xA0] //0x2D8 live server
-				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x300, PROTO_NORMAL_READ);//0x2E0 live server
+				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x338, PROTO_NORMAL_READ);//0x2F8 old //unsigned char    UnknownData14[0xA0]
+				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x340, PROTO_NORMAL_READ);//0x300 old
 
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
@@ -215,7 +217,8 @@ private:
 			}
 			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox" || actorGName.substr(0, strlen("Carapackage")) == "Carapackage")
 			{
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0120);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
@@ -228,7 +231,8 @@ private:
 			else if (std::find(vehicleIDs.begin(), vehicleIDs.end(), curActorID) != vehicleIDs.end())
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
-				int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
+				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0120);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x290, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
@@ -367,20 +371,20 @@ private:
 
 
 
-		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x410fb20, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x417aa80, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
 
-		m_GNames = m_kReader->readType64(base + 0x4180878, PROTO_NORMAL_READ);
+		m_GNames = m_kReader->readType64(base + 0x41eb808, PROTO_NORMAL_READ);
 
-		m_gameInstance = READ64(m_UWorld + 0x148);
-		m_ULocalPlayer = READ64(m_gameInstance + 0x38);
+		m_gameInstance = tsl_decrypt_prop(&tsl, m_UWorld + 0xf0);
+		m_ULocalPlayer = READ64(m_gameInstance + 0xa0);
 		m_localPlayer = tsl_decrypt_prop(&tsl, m_ULocalPlayer);
 		//m_viewportclient = READ64(m_localPlayer + 0x60);
 
 		m_playerController = tsl_decrypt_prop(&tsl, m_localPlayer + 0x30);
-		m_localPawn = tsl_decrypt_prop(&tsl, m_playerController + 0x470);
-		m_localPlayerState = tsl_decrypt_prop(&tsl, m_localPawn + 0x3E0);
+		m_localPawn = tsl_decrypt_prop(&tsl, m_playerController + 0x4b0);//local_player_actor
+		m_localPlayerState = tsl_decrypt_prop(&tsl, m_localPawn + 0x420);//old 0x3E0
 
-		m_ULevel = tsl_decrypt_prop(&tsl, m_UWorld + 0x30);
+		m_ULevel = tsl_decrypt_prop(&tsl, m_UWorld + 0xa0);
 
 
 
@@ -402,7 +406,7 @@ private:
 		//int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3D90770);// + 0xA0
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3C34120);
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0);
-		uint64_t decryptedAActorPtr = tsl_decrypt_actor(&tsl, m_ULevel + 0xA0);
+		uint64_t decryptedAActorPtr = tsl_decrypt_actor(&tsl, m_ULevel + 0x290);
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
@@ -410,10 +414,10 @@ private:
 		//m_playerCount = m_kReader->readType32(m_ULevel + 0xA8, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
 
-		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x78, PROTO_NORMAL_READ);
+		m_localPlayerPosition = m_kReader->readTypeVec(m_localPlayer + 0x58, PROTO_NORMAL_READ);//old 0x78
 		//m_localPlayerBasePointer = m_kReader->readType64(m_localPlayer, PROTO_NORMAL_READ);
 
-		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x04CC, PROTO_NORMAL_READ);//0x049C old
+		m_localTeam = m_kReader->readType32(m_localPlayerState + 0x0700, PROTO_NORMAL_READ);//0x04CC old
 
 		//int32_t myID = m_kReader->readType32(m_localPlayer + 0x0018, PROTO_NORMAL_READ);
 		//std::string myGName = m_kReader->getGNameFromId(myID, m_GNames);
@@ -422,16 +426,15 @@ private:
 
 
 
-		m_XOriginLocation = m_kReader->readType32(m_UWorld + 0x938, PROTO_NORMAL_READ);//these tend to be before class UWorldComposition*                           WorldComposition;
-		m_YOriginLocation = m_kReader->readType32(m_UWorld + 0x93C, PROTO_NORMAL_READ);//
-		m_ZOriginLocation = m_kReader->readType32(m_UWorld + 0x940, PROTO_NORMAL_READ);//
+		m_XOriginLocation = m_kReader->readType32(m_UWorld + 0x958, PROTO_NORMAL_READ);//0x938 old //these tend to be before class UWorldComposition*                           WorldComposition;
+		m_YOriginLocation = m_kReader->readType32(m_UWorld + 0x95C, PROTO_NORMAL_READ);//0x93C old
+		m_ZOriginLocation = m_kReader->readType32(m_UWorld + 0x960, PROTO_NORMAL_READ);//0x940 old
 
-		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x498, PROTO_NORMAL_READ);//APlayerCameraManager //0x438 live server
+		m_playerCameraManager = m_kReader->readType64(m_playerController + 0x4D8, PROTO_NORMAL_READ);//APlayerCameraManager //0x498 live server
 		//m_playerCameraLocation = m_kReader->readTypeVec(m_playerCameraManager + 0x430, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo, 0x0 Location
-		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + 0x44C, PROTO_NORMAL_READ);//within CameraCache //0x420 FCameraCacheEntry, 0x10 FMinimalViewInfo, 0xC Rotation
+		m_playerCameraRotation = m_kReader->readTypeVec(m_playerCameraManager + (0x460 + 0x580), PROTO_NORMAL_READ);//within CameraCache //0x44C FCameraCacheEntry, 0x10 FMinimalViewInfo, 0xC Rotation
 
-
-		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x440, PROTO_NORMAL_READ);
+		m_localPlayerPositionCamera = m_kReader->readTypeVec(m_playerCameraManager + 0x47C, PROTO_NORMAL_READ);//old 0x440
 
 
 		//m_localPlayerCharacterMovement = m_kReader->readType64(m_localPawn + 0x418, PROTO_NORMAL_READ);
@@ -629,7 +632,7 @@ private:
 
 	// exports
 
-#define TABLE 0x3e85120
+#define TABLE 0x3ef0120
 
 	struct uint128_t {
 		uint64_t low;
@@ -653,9 +656,8 @@ private:
 
 		
 		uint32_t key = (uint32_t)xmm.low;
-		uint32_t x = ((uint16_t)(IDA_HIWORD(key) + 103) + 4483) ^ ror2(IDA_LOWORD(key) - 83, 8);
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(((IDA_HIWORD(key) - 22) ^ ror2(IDA_LOWORD(key) - 83, 8)) - 107) ^ ((uint8_t)~(~BYTE1(x) + 27) + 58)) % 128));
-		return ror8(decrypt(tsl, func, ~(~xmm.high - key)), 119);
+		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(key ^ (BYTE2(key) - 72)) ^ (((uint16_t)(key ^ (HIWORD(key) + 26808)) >> 8) + 144)) % 128));
+		return ror8(decrypt(tsl, func, ror8(xmm.high, 8 * (key & 7)) ^ key), -40);
 	}
 
 	uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
@@ -668,31 +670,17 @@ private:
 		
 		uint32_t key = (uint32_t)xmm.low;
 		uint32_t x;
-		uint16_t y;
-		uint32_t z;
-		uint32_t w;
-		uint32_t q;
-		uint32_t e;
-		uint64_t r;
-		if (IDA_LOWORD(key) & 2) {
-			x = ~(IDA_LOWORD(key) - 12);
-			y = IDA_LOWORD(key) + 12;
+		uint32_t y;
+		x = key >> 16;
+		if (key & 0x40000) {
+			x = ~(~x - 21);
 		}
 		else {
-			IDA_LOWORD(x) = IDA_LOWORD(key) + 13;
-			y = IDA_LOWORD(key) ^ 0xC;
+			IDA_LOWORD(x) = x + 14;
 		}
-		z = (uint16_t)(~y + x);
-		w = z ^ ((key >> 16) + 33996);
-		q = (uint8_t)(z ^ (IDA_HIWORD(key) - 52));
-		if (q & 2) {
-			e = ~(q + 108) + ~(q - 108);
-		}
-		else {
-			e = q + ~(q ^ 0x6C) + 109;
-		}
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)e ^ ((uint8_t)(BYTE1(w) - 44) + 104)) % 128));
-		return ror8(decrypt(tsl, func, rol8(xmm.high ^ key, 8 * (IDA_LOWORD(key) & 7u)) - key), -100);
+		y = ((uint16_t)x + 29091) ^ ror2(key - 115, 8);
+		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)(((x - 93) ^ ror2(key - 115, 8)) + 117) ^ ((uint8_t)(BYTE1(y) + 59) + 250)) % 128));
+		return ror8(decrypt(tsl, func, ~(~xmm.high - key)), 23);
 	}
 	/*
 	uint32_t get_func_len(struct tsl *tsl, uint64_t func, uint8_t start, uint32_t end) {
