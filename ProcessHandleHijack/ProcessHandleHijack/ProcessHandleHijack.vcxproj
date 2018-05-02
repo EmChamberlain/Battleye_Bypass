@@ -30,7 +30,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{60597328-3F11-45BA-84C4-299A692E876C}</ProjectGuid>
     <RootNamespace>ProcessHandleHijack</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
