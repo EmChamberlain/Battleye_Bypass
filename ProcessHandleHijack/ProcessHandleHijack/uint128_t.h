@@ -185,7 +185,7 @@ public:
 	}
 
 	bool operator>(const uint128_t & rhs) const;
-
+	
 	template <typename T> bool operator>(const T & rhs) const {
 		return (UPPER || (LOWER > (uint64_t)rhs));
 	}

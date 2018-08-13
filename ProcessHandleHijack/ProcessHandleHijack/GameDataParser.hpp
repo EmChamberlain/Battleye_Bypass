@@ -1,12 +1,11 @@
 #pragma once
 
 #include "KReader.hpp"
-//#include "pubgdec.hpp"
-
 
 #include <deque>
 #include <vector>
 #include "def.h"
+//#include "uint128_t.h"
 #define READ32(addr) m_kReader->readType32(addr, PROTO_NORMAL_READ)
 #define READ64(addr) m_kReader->readType64(addr, PROTO_NORMAL_READ)
 
@@ -127,17 +126,6 @@ public:
 	bool needToWriteAng = false;
 	Vector3 toWriteAng = Vector3(89.0, 89.0, 0.0);
 
-	typedef uint64_t(*decrypt_func)(uint64_t);
-
-	struct tsl {
-		union {
-			decrypt_func func;
-			uint8_t *arr;
-		};
-	};
-
-	struct tsl tsl;
-
 
 private:
 
@@ -158,18 +146,18 @@ private:
 			//int64_t curActor = pubgdec::decptr(m_kReader, m_AActorPtr + (i * 0x180));//#define O_ENCRYPTEDENTITYSIZE 0x180
 			if (curActor == NULL)
 				continue;
-			int32_t curActorID = m_kReader->readType32(curActor + 0x0018, PROTO_NORMAL_READ);// 0x0018 live server
+			int32_t curActorID = tsl_decrypt_ID(READ32(curActor + 0x14));// 0x0018 live server
 			if (curActorID == NULL)
 				continue;
-			std::string actorGName = m_kReader->getGNameFromId(curActorID, m_GNames);
+			std::string actorGName = GetGNameFromId(m_GNames, curActorID);
 
 			// Here we check if the name is found from the wanted GNames list (PlayerMale etc...)
 			if (std::find(playerIDs.begin(), playerIDs.end(), curActorID) != playerIDs.end())
 			{
 				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
-				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0180);//USceneComponent //0x180 live server
+				int64_t rootCmpPtr = tsl_decrypt_rootComponent(curActor + 0x220);//USceneComponent //0x180 live server
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x2D0, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
-				int64_t playerState = tsl_decrypt_prop(&tsl, curActor + 0x0420);//0x3C0 live server
+				int64_t playerState = READ64(curActor + 0x0420);//0x3C0 live server
 				int32_t actorTeam = READ64(playerState + 0x718);//0x04CC old
 
 				actorLocation.X += m_XOriginLocation;
@@ -187,19 +175,19 @@ private:
 			{
 
 				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x198, PROTO_NORMAL_READ);
-				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0180);
+				int64_t rootCmpPtr = tsl_decrypt_rootComponent(curActor + 0x220);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x2D0, PROTO_NORMAL_READ);
-				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x0388, PROTO_NORMAL_READ);//0x2F8 old //unsigned char    UnknownData14[0xA0]
-				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x0390, PROTO_NORMAL_READ);//0x300 old
+				int64_t DroppedItemArray = m_kReader->readType64(curActor + 0x278, PROTO_NORMAL_READ);//0x2F8 old //unsigned char    UnknownData14[0xA0]
+				int32_t DroppedItemCount = m_kReader->readType32(curActor + 0x280, PROTO_NORMAL_READ);//0x300 old
 
 				for (int j = 0; j < DroppedItemCount; j++)
 				{
 					int64_t ADroppedItem = m_kReader->readType64(DroppedItemArray + j * 0x10, PROTO_NORMAL_READ);
-					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x2D0, PROTO_NORMAL_READ);
+					Vector3 droppedLocation = m_kReader->readTypeVec(ADroppedItem + 0x2C8, PROTO_NORMAL_READ);
 					droppedLocation.X = droppedLocation.X + actorLocation.X + m_XOriginLocation;
 					droppedLocation.Y = droppedLocation.Y + actorLocation.Y + m_YOriginLocation;
-					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x538, PROTO_NORMAL_READ);
-					int32_t UItemID = m_kReader->readType32(UItem + 0x18, PROTO_NORMAL_READ);
+					int64_t UItem = m_kReader->readType64(ADroppedItem + 0x5E8, PROTO_NORMAL_READ);
+					int32_t UItemID = tsl_decrypt_ID(curActor + 0x20);// 0x0018 live server
 					std::string itemName = m_kReader->getGNameFromId(UItemID, m_GNames);
 
 					// check if inside the map / array of wanted items
@@ -219,7 +207,7 @@ private:
 			else if (actorGName.substr(0, strlen("CarePackage")) == "CarePackage" || actorGName.substr(0, strlen("AircraftCarePackage")) == "AircraftCarePackage" || actorGName.substr(0, strlen("Carapackage_RedBox")) == "Carapackage_RedBox" || actorGName.substr(0, strlen("Carapackage")) == "Carapackage")
 			{
 				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
-				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0180);
+				int64_t rootCmpPtr = tsl_decrypt_rootComponent(curActor + 0x220);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x2D0, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
@@ -233,7 +221,7 @@ private:
 			{
 				// tästä alaspäin voi tehdä if-lohkoissa
 				//int64_t rootCmpPtr = m_kReader->readType64(curActor + 0x0198, PROTO_NORMAL_READ);//USceneComponent //0x180 live server
-				int64_t rootCmpPtr = tsl_decrypt_prop(&tsl, curActor + 0x0180);
+				int64_t rootCmpPtr = tsl_decrypt_rootComponent(curActor + 0x220);
 				Vector3 actorLocation = m_kReader->readTypeVec(rootCmpPtr + 0x2D0, PROTO_NORMAL_READ);//FVector    Location //0x1A0 live server
 
 				actorLocation.X += m_XOriginLocation;
@@ -318,20 +306,71 @@ private:
 		playersOld = players;
 		vehiclesOld = vehicles;
 		itemsOld = items;
-		players = playersTemp;
+		players = playersTemp; 
 		vehicles = vehiclesTemp;
 		items = itemsTemp;
 		writingVectors = false;
 
 	}
+
+#define STATIC_GNAMES 0x45450F0  // (48 8D 3D ? ? ? ? F3 48 AB 48 8D 3D ? ? ? ? B9 ? ? ? ? F3 48 AB + 3) + 1FA0
+
+#define GNAMES_CHUNK_SIZE 0x416C  // C1 ? ? 8B ? C1 ? 1F 03 ? 69 ? ? ? ? ? 48 63 ? + 12
+
+
+
+	std::string GetGNameFromId(uintptr_t GN, int ID)
+	{
+		try
+		{
+			const uintptr_t fNamePtr = READ64(GN + int(ID / GNAMES_CHUNK_SIZE) * 8);
+			const uintptr_t fName = READ64(fNamePtr + 8 * int(ID % GNAMES_CHUNK_SIZE));
+
+			byte resultname[256]{ NULL };
+			RMOResponseRPMBytes *response = m_kReader->readBytes(fName + 0x10, 0x100, PROTO_NORMAL_READ);
+			if (!response)
+				return "";
+			memcpy(resultname, response->val, 0x100);
+			delete response;
+
+			return std::string(reinterpret_cast<const char*>(resultname));
+		}
+		catch (...)
+		{
+			return "";
+		}
+	}
+
+	uintptr_t get_gnames()
+	{
+		uintptr_t gnames = 0;
+
+		uintptr_t tmp = READ64(getPUBase() + STATIC_GNAMES);
+
+		for (int i = 0; i < 0xFFFF; i++)
+		{
+			gnames = tmp - (i * 0x80) + 0x10;
+			//gnames = tmp - (i * 0x80);
+			if (
+				GetGNameFromId(gnames, 1) == "ByteProperty"
+				&& GetGNameFromId(gnames, 2) == "IntProperty"
+				&& GetGNameFromId(gnames, 3) == "BoolProperty"
+				)
+			{
+				return gnames;
+			}
+		}
+		return 0;
+	}
+
 	void oneTimeLocals()
 	{
 		if (getPUBase() == 0)
 			readPUBase();
 
-		if (!tsl_init(&tsl)) {
+		/*if (!tsl_init(&tsl)) {
 			// what?
-		}
+		}*/
 
 		int64_t base = m_kReader->getPUBase();
 
@@ -372,26 +411,20 @@ private:
 
 
 
-		m_UWorld = m_kReader->readType64(m_kReader->readType64(base + 0x41B5A80, PROTO_NORMAL_READ), PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(base + 0x4116160, PROTO_NORMAL_READ);
+		m_UWorld = m_kReader->readType64(m_UWorld, PROTO_NORMAL_READ);
+		m_GNames = get_gnames();//READ64(get_gnames());
 
-		m_GNames = m_kReader->readType64(base + 0x4226808, PROTO_NORMAL_READ);
-
-		m_gameInstance = tsl_decrypt_prop(&tsl, m_UWorld + 0x00E0);
-		m_ULocalPlayer = READ64(m_gameInstance + 0x0038);
-		m_localPlayer = tsl_decrypt_prop(&tsl, m_ULocalPlayer);
+		m_gameInstance = tsl_decrypt_game_inst(m_UWorld + 0xa8);
+		m_ULocalPlayer = READ64(m_gameInstance + 0xc0);
+		m_localPlayer = tsl_decrypt_Local(m_ULocalPlayer);
 		//m_viewportclient = READ64(m_localPlayer + 0xa0);
 
-		m_playerController = tsl_decrypt_prop(&tsl, m_localPlayer + 0x30);
-		m_localPawn = tsl_decrypt_prop(&tsl, m_playerController + 0x0440);//local_player_actor
-		m_localPlayerState = tsl_decrypt_prop(&tsl, m_localPawn + 0x0420);//old 0x3E0
+		m_playerController = tsl_decrypt_controller(m_localPlayer + 0x38);//currently wrong
+		m_localPawn = tsl_decrypt_pawn(m_playerController + 0x430);//local_player_actor
+		m_localPlayerState = READ64(m_localPawn + 0x0420);//old 0x3E0
 
-		m_ULevel = tsl_decrypt_prop(&tsl, m_UWorld + 0x160);
-
-
-
-
-
-
+		m_ULevel = tsl_decrypt_level(m_UWorld + 0xA08);
 
 	}
 	void readLocals()
@@ -407,7 +440,7 @@ private:
 		//int64_t decryptedAActorPtr = DecryptData(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3D90770);// + 0xA0
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0, m_kReader->getPUBase() + 0x3C34120);
 		//uint64_t decryptedAActorPtr = DecryptActors(m_ULevel + 0xA0);
-		uint64_t decryptedAActorPtr = tsl_decrypt_actor(&tsl, m_ULevel + 0x40);
+		uint64_t decryptedAActorPtr = tsl_decrypt_actor(m_ULevel + 0x1D0);
 		m_AActorPtr = m_kReader->readType64(decryptedAActorPtr, PROTO_NORMAL_READ);//TArray<class AActor*>    AActors //0xA0 near actors //0xB0 all actors
 		m_playerCount = m_kReader->readType32(decryptedAActorPtr + 0x08, PROTO_NORMAL_READ);//TArray<class AActor*> + 0x8 //0xA8 near actors //0xB8 all actors
 
@@ -474,18 +507,10 @@ private:
 
 	}
 
-
-
 	/*
 	* CLASS VARIABLES
 	*/
 	KReader* m_kReader;
-
-
-
-
-
-
 
 	/*
 	* Global IDs that are found from the game
@@ -498,341 +523,119 @@ private:
 	std::vector<int32_t> playerIDs;
 	std::vector<int32_t> vehicleIDs;
 
-	int tsl_init(struct tsl *tsl) {
-		tsl->func = (decrypt_func)VirtualAlloc(NULL, 0x200, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-		return tsl->func == NULL ? 0 : 1;
+	uint64_t tsl_decrypt_game_inst(uint64_t game_inst)
+	{
+		uint64_t a1 = READ64(game_inst);
+		unsigned __int64 v1; // r10
+		int v2; // er8
+		__int64 v4; // [rsp+10h] [rbp+10h]
+
+		v1 = a1 >> 32;
+		v2 = ((a1 & 0xFFFF0000 | (unsigned __int16)a1 ^ ((unsigned int)a1 >> 16)) - 1360120078) >> 16;
+		LODWORD(v4) = (v2 ^ (unsigned __int16)((a1 ^ WORD1(a1)) + 14066) | ((unsigned __int16)__ROR2__(v2, 8) << 16)) ^ 0xAEEE36F2;
+		HIDWORD(v4) = ((((unsigned __int16)__ROR2__(WORD2(a1) ^ WORD1(v1), 8) | ((unsigned __int16)__ROR2__(WORD1(v1), 8) << 16))
+			- 1380864718) & 0xFFFF0000 | (unsigned __int16)__ROR2__(
+			(__ROR2__(WORD2(a1) ^ WORD1(v1), 8) - 21198) ^ ((((unsigned __int16)__ROR2__(WORD2(a1) ^ WORD1(v1), 8) | ((unsigned int)(unsigned __int16)__ROR2__(WORD1(v1), 8) << 16)) - 1380864718) >> 16),
+				8)) ^ 0x524E52CE;
+		return v4;
 	}
 
-	void tsl_finit(struct tsl *tsl) {
-		if (tsl->func != NULL) {
-			VirtualFree(tsl->func, 0, MEM_RELEASE);
-			tsl->func = NULL;
-		}
+	uint64_t tsl_decrypt_Local(uint64_t Local)
+	{
+		uint64_t a1 = READ64(Local);
+
+		__int64 v1; // rcx
+		return __PAIR__(
+			(uint32)((HIDWORD(a1) ^ 0x2E4703E8) + 1675322332) ^ 0x55639FCCu,
+			__ROR4__((__ROR4__(a1 ^ 0xC91840BD, 8) + 1692685404) ^ 0x641840BD, 8) ^ 0x64E4545Cu);
 	}
 
-	// ida
+	uint64_t tsl_decrypt_controller(uint64_t controller)
+	{
+		uint64_t a1 = READ64(controller);
+		unsigned __int64 v1; // r10
+		unsigned int v2; // er8
+		unsigned int v3; // edx
+		__int64 v5; // [rsp+10h] [rbp+10h]
 
-
-	// rotate
-
-	static uint8_t rol1(uint8_t x, unsigned int count) {
-		count %= 8;
-		return (x << count) | (x >> (8 - count));
+		v1 = a1 >> 32;
+		v2 = ((unsigned __int16)a1 ^ ((unsigned int)a1 >> 16) | ((unsigned __int16)__ROR2__(WORD1(a1), 8) << 16)) + 943216712;
+		v3 = (HIDWORD(a1) & 0xFFFF0000 | (unsigned __int16)__ROL2__(WORD2(a1) ^ WORD1(v1), 8)) + 927414088;
+		LODWORD(v5) = ((v2 >> 16) ^ (unsigned __int16)((a1 ^ WORD1(a1)) + 22600) | ((unsigned __int16)__ROR2__(HIWORD(v2), 8) << 16)) ^ 0x38385848;
+		HIDWORD(v5) = (v3 & 0xFFFF0000 | (unsigned __int16)__ROL2__(v3 ^ HIWORD(v3), 8)) ^ 0xC8B8C8B8;
+		return v5;
 	}
+	uint64_t tsl_decrypt_pawn(int64_t entity)
+	{
+		uint64_t a1 = READ64(entity);
 
-	static uint16_t rol2(uint16_t x, unsigned int count) {
-		count %= 16;
-		return (x << count) | (x >> (16 - count));
+		unsigned __int64 v1; // r8
+		unsigned int v2; // edx
+		__int64 v4; // [rsp+10h] [rbp+10h]
+
+		v1 = a1 >> 32;
+		v2 = (a1 & 0xFFFF0000 | (unsigned __int16)a1 ^ ((unsigned int)a1 >> 16)) + 404273256;
+		IDA_LODWORD(v4) = (v2 & 0xFFFF0000 | (unsigned __int16)((a1 ^ WORD1(a1)) - 18328) ^ (v2 >> 16)) ^ 0x1818B868;
+		IDA_LODWORD(v1) = (((unsigned __int16)__ROR2__(WORD1(v1), 8) << 16) | (unsigned __int16)__ROL2__(WORD2(a1) ^ WORD1(v1), 8))
+			+ 392632168;
+		IDA_HIDWORD(v4) = ((unsigned __int16)__ROL2__(WORD1(v1) ^ v1, 8) | ((unsigned __int16)__ROR2__(WORD1(v1), 8) << 16)) ^ 0xE898E898;
+		return v4;
 	}
+	uint64_t tsl_decrypt_level(uint64_t level)
+	{
+		uint64_t a1 = READ64(level);
+		int v1; // eax
+		int v2; // eax
+		unsigned int v3; // eax
+		unsigned __int64 v4; // rcx
+		int v5; // ecx
+		int v6; // eax
+		unsigned int v7; // eax
+		__int64 v9; // [rsp+10h] [rbp+10h]
 
-	static uint32_t rol4(uint32_t x, unsigned int count) {
-		count %= 32;
-		return (x << count) | (x >> (32 - count));
-	}
-
-	static uint64_t rol8(uint64_t x, unsigned int count) {
-		count %= 64;
-		return (x << count) | (x >> (64 - count));
-	}
-
-	static uint8_t ror1(uint8_t x, unsigned int count) {
-		count %= 8;
-		return (x << (8 - count)) | (x >> count);
-	}
-
-	static uint16_t ror2(uint16_t x, unsigned int count) {
-		count %= 16;
-		return (x << (16 - count)) | (x >> count);
-	}
-
-	static uint32_t ror4(uint32_t x, unsigned int count) {
-		count %= 32;
-		return (x << (32 - count)) | (x >> count);
-	}
-
-	static uint64_t ror8(uint64_t x, unsigned int count) {
-		count %= 64;
-		return (x << (64 - count)) | (x >> count);
-	}
-
-	// macro for uc!
-
-	// bool read_size(uint64_t src, void *dest, size_t size)
-//#define READ(src, dest, size) mem->read_size(src, dest, size)
-	// template<typename T> read(uint64_t addr)
-
-
-// credit: https://www.unknowncheats.me/forum/members/2235736.html
-//LIVE
-	struct rel_addr {
-		uint32_t offset;
-		uint32_t addr;
-	};
-
-	int find_call(const uint8_t *buf, uint32_t size, struct rel_addr *ret) {
-		uint32_t offset = 0;
-		while (offset < (size - 5)) {
-			if (buf[offset] == 0xe8) {
-				uint32_t addr = *(uint32_t *)(buf + (offset + 1));
-				if (addr < 0x8000) {
-					ret->offset = offset + 5;
-					ret->addr = addr;
-					return 1;
-				}
-			}
-			offset++;
-		}
-		return 0;
-	}
-
-	uint32_t get_func_len(const uint8_t *buf, uint32_t size, uint8_t start, uint32_t end) {
-		if (*buf == start) {
-			uint32_t offset = 0;
-			while (offset < (size - sizeof(end))) {
-				if (*(uint32_t *)(buf + offset) == end) {
-					return offset;
-				}
-				offset++;
-			}
-		}
-		return 0;
-	}
-
-	uint64_t decrypt(struct tsl *tsl, uint64_t func, uint64_t arg) {
-		uint8_t buf_0x100[0x100];
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(func, 0x100, PROTO_NORMAL_READ);
-		memcpy(buf_0x100, response->val, 0x100);
-		delete response;
-
-		
-		struct rel_addr rel_addr;
-		if (!find_call(buf_0x100, 0x100, &rel_addr)) {
-			return 0;
-		}
-		uint64_t abs_addr = func + (rel_addr.offset + rel_addr.addr);
-		uint8_t buf_0x20[0x20];
-
-		response = m_kReader->readBytes(abs_addr, 0x20, PROTO_NORMAL_READ);
-		memcpy(buf_0x20, response->val, 0x20);
-		delete response;
-
-		
-		uint32_t len = get_func_len(buf_0x20, 0x20, 0x48, 0xccccccc3);
-		if (!len || len > 0xf) {
-			return 0;
-		}
-		uint32_t temp = rel_addr.offset - 5;
-		memcpy(tsl->func, buf_0x100, temp);
-		memcpy((char *)tsl->func + temp, buf_0x20, len);
-		memcpy((char *)tsl->func + (temp + len), buf_0x100 + rel_addr.offset, 0x100 - rel_addr.offset);
-		uint64_t ret = tsl->func(arg);
-		memset(tsl->func, 0, 0x200);
-		return ret;
-	}
-
-	// exports
-
-#define TABLE 0x3F2B120
-
-	struct uint128_t {
-		uint64_t low;
-		uint64_t high;
-	};
-
-	uint64_t tsl_decrypt_world(struct tsl *tsl, uint64_t world) {
-		return 0;
-	}
-
-	uint64_t tsl_decrypt_gnames(struct tsl *tsl, uint64_t gnames) {
-		return 0;
-	}
-
-	uint64_t tsl_decrypt_actor(struct tsl *tsl, uint64_t actor) {
-		struct uint128_t xmm;
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(actor, 16, PROTO_NORMAL_READ);
-		memcpy(&xmm, response->val, 16);
-		delete response;
-
-		
-		uint32_t key = (uint32_t)xmm.low;
-
-		uint16_t x = (uint16_t)ror2(key + 109, 8) ^ ((uint16_t)ror2(IDA_HIWORD(key) + 89, 8) + 53699);
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)((ror2(key + 109, 8) ^ (ror2(HIWORD(key) + 89, 8) - 61)) + 85) ^ ((uint8_t)(BYTE1(x) + 91) + 186)) % 128));
-		return ror8(decrypt(tsl, func, ~(~xmm.high - key)), -73);
-	}
-
-	uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
-		struct uint128_t xmm;
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(prop, 16, PROTO_NORMAL_READ);
-		memcpy(&xmm, response->val, 16);
-		delete response;
-
-		
-		uint32_t key = (uint32_t)xmm.low;
-
-		int16_t x, y;
-		int8_t z;
-
-		if (key & 4)
-			x = ~(~(uint16_t)key + 357);
+		if (a1 & 1)
+			v1 = a1 ^ 0x31C87570 | 1;
 		else
-			IDA_LOWORD(x) = key - 238;
-
-		y = (uint16_t)x ^ ((uint16_t)rol2(IDA_HIWORD(key), 8) + 25369);
-		z = (uint8_t)(x ^ (rol2(IDA_HIWORD(key), 8) + 25));
-
-		if (z & 4)
-			z = ~(~z - 243);
+			v1 = (a1 ^ 0xDB4803BD) & 0xFFFFFFFE;
+		v2 = v1 - 164209110;
+		if (v2 & 1)
+			v3 = v2 ^ 0xA2C87571 | 1;
 		else
-			LOBYTE(z) = z - 94;
-
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (((uint8_t)z ^ ((uint8_t)(BYTE1(y) - 97) + 142)) % 128));
-		return ror8(decrypt(tsl, func, (rol8(xmm.high, 8 * (key & 7)) - key)), -75);
-	}
-	/*
-	uint32_t get_func_len(struct tsl *tsl, uint64_t func, uint8_t start, uint32_t end) {
-		uint8_t buf[0x80];
-		RMOResponseRPMBytes *response = m_kReader->readBytes(func, sizeof(buf), PROTO_NORMAL_READ);
-		memcpy(buf, response->val, sizeof(buf));
-		delete response;
-
-		if (buf[0] == start) {
-			uint32_t len = 0;
-			for (; len < (sizeof(buf) - sizeof(end)); len++) {
-				if (*(uint32_t *)(buf + len) == end) {
-					return len;
-				}
-			}
-		}
-		return 0;
-	}
-	int make_decrypt_func(struct tsl *tsl, uint64_t func) {
-		uint64_t x = (func + 14) + READ32(func + 10);
-		uint32_t len = get_func_len(tsl, x, 0x48, 0xccccccc3);
-		if (!len || len > 0xf) {
-			return 0;
-		}
-		RMOResponseRPMBytes *response = m_kReader->readBytes(func, 9, PROTO_NORMAL_READ);
-		memcpy(tsl->func, response->val, 9);
-		delete response;
-
-		response = m_kReader->readBytes(x, len, PROTO_NORMAL_READ);
-		memcpy((char *)tsl->func + 9, response->val, len);
-		delete response;
-
-		response = m_kReader->readBytes(func + 14, 0x50, PROTO_NORMAL_READ);
-		memcpy((char *)tsl->func + 9 + len, response->val, 0x50);
-		delete response;
-
-		return 1;
+			v3 = (v2 ^ 0x764803BC) & 0xFFFFFFFE;
+		v4 = a1 >> 32;
+		LODWORD(v9) = v3 ^ 0xF6365E2A;
+		if (v4 & 1)
+			v5 = v4 ^ 0xC0272A89 | 1;
+		else
+			v5 = (v4 ^ 0x4077C6E8) & 0xFFFFFFFE;
+		v6 = v5 - 169216662;
+		if (((_BYTE)v5 + 106) & 1)
+			v7 = (v6 ^ 0x31272A88 | 1) ^ 0xA160A96;
+		else
+			v7 = (v6 ^ 0xDB77C6E9) & 0xFFFFFFFE ^ 0xA160A96;
+		HIDWORD(v9) = v7;
+		return v9;
 	}
 
-	// exports
+	uint64_t tsl_decrypt_actor(uint64_t actor) {
+		uint64_t a1 = READ64(actor);
+		__int64 v4; // [rsp+30h] [rbp+8h]
+		v4 = __ROL4__(__ROL4__(a1 - 1374092355, 16) + 1392691556, 16) ^ 0x9E9C5A7u;
+		IDA_HIDWORD(v4) = __ROR4__(__ROR4__((a1 >> 32) + 323536616, 8) + 915361519, 8) ^ 0x77B977F9;
 
-#define TABLE 0x3c71120
-
-	struct uint128_t {
-		uint64_t low;
-		uint64_t high;
-	};
-
-	uint64_t tsl_decrypt_world(struct tsl *tsl, uint64_t world) {
-		struct uint128_t xmm;
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(world, 16, PROTO_NORMAL_READ);
-		memcpy(&xmm, response->val, 16);
-		delete response;
-
-		uint32_t key = (uint32_t)xmm.low;
-		uint16_t x;
-		uint16_t y;
-		x = ror2(key + 85, -85);
-		y = x ^ (ror2(IDA_HIWORD(key) - 95, 95) + 55643);
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * ((ror1((x ^ (ror2(IDA_HIWORD(key) - 95, 95) + 91)) + 125, -125) ^ (ror1(BYTE1(y), 77) + 138)) % 128));
-		if (!make_decrypt_func(tsl, func)) {
-			return 0;
-		}
-		uint64_t ret = tsl->func(key ^ rol8(xmm.high - key, key & 7));
-		memset(tsl->func, 0, 0x400);
-		return ror8(ret, -17);
+		return v4;
 	}
 
-	uint64_t tsl_decrypt_actor(struct tsl *tsl, uint64_t actor) {
-		struct uint128_t xmm;
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(actor, 16, PROTO_NORMAL_READ);
-		memcpy(&xmm, response->val, 16);
-		delete response;
-
-		uint32_t key = (uint32_t)xmm.low;
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * ((rol1(((BYTE2(key) + 84) ^ rol2(key + 102, 102)) - 106, -106) ^ (ror1(((uint16_t)((WORD1(key) - 114 + 25286) ^ rol2(key + 102, 102)) >> 8) - 10, 10) + 244)) % 128));
-		if (!make_decrypt_func(tsl, func)) {
-			return 0;
-		}
-		uint64_t ret = tsl->func(ror8(xmm.high, key & 7) + key);
-		memset(tsl->func, 0, 0x400);
-		return ror8(ret, -82);
+	uint64_t tsl_decrypt_rootComponent(uint64_t prop)
+	{
+		uint64_t a1 = READ64(prop);
+		__int64 v112; // [rsp+198h] [rbp+98h]
+		LODWORD(v112) = __ROL4__(__ROL4__(a1 - 297270339, 16) - 764344028, 16) ^ 0x49290567;
+		HIDWORD(v112) = __ROR4__(__ROR4__(HIDWORD(a1) + 1400358632, 8) - 1233219665, 8) ^ 0x37F93739;
+		return v112;
 	}
-
-	uint64_t tsl_decrypt_prop(struct tsl *tsl, uint64_t prop) {
-		struct uint128_t xmm;
-
-		RMOResponseRPMBytes *response = m_kReader->readBytes(prop, 16, PROTO_NORMAL_READ);
-		memcpy(&xmm, response->val, 16);
-		delete response;
-
-
-		uint32_t key = (uint32_t)xmm.low;
-		uint16_t x;
-		uint16_t y;
-		uint16_t z;
-		uint16_t w;
-		uint8_t q;
-		uint8_t e;
-		uint32_t r; // uint8_t
-		uint64_t t;
-		if (key & 1) {
-			x = rol2(key, 31);
-		}
-		else {
-			x = ror2(key, 31);
-		}
-		y = key >> 16;
-		if (key & 0x10000) {
-			z = rol2(y, -125);
-		}
-		else {
-			z = ror2(y, -125);
-		}
-		w = x ^ (z + 54543);
-		q = x ^ (z + 15);
-		if (w & 1) {
-			e = rol1(q, -105);
-		}
-		else {
-			e = ror1(q, -105);
-		}
-		r = e ^ ((uint8_t)~(~BYTE1(w) + 7) + 34);
-		if (key & 2) {
-			t = xmm.high - key;
-		}
-		else {
-			t = key + xmm.high;
-		}
-		uint64_t func = READ64(GET_ADDR(TABLE) + 0x8 * (r % 128));
-		if (!make_decrypt_func(tsl, func)) {
-			return 0;
-		}
-		uint64_t ret = tsl->func(~t);
-		memset(tsl->func, 0, 0x400);
-		return ror8(ret, -45);
-	}*/
-
-
-
-
-
+	int32_t tsl_decrypt_ID(int32_t id)
+	{
+		return   __ROR4__(id ^ 0x2B0248D0, 15) ^ (__ROR4__(id ^ 0x2B0248D0, 15) << 16) ^ 0x89927FF9;
+	}
 };
